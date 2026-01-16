@@ -5,7 +5,8 @@ import { ExperienceForm } from './components/ExperienceForm';
 import { EducationForm } from './components/EducationForm';
 import { SkillsForm } from './components/SkillsForm';
 import { ProjectsForm } from './components/ProjectsForm';
-import type { Resume, ContactInfo, ProfessionalSummary, WorkExperience, Education, Skills, Project } from './types';
+import { SectionReorder } from './components/SectionReorder';
+import type { Resume, ContactInfo, ProfessionalSummary, WorkExperience, Education, Skills, Project, SectionKey } from './types';
 import './App.css';
 
 function App() {
@@ -29,6 +30,15 @@ function App() {
   const [skills, setSkills] = useState<Skills>({ skills: [] });
   const [projects, setProjects] = useState<Project[]>([]);
 
+  const [sectionOrder, setSectionOrder] = useState<SectionKey[]>([
+    'contact',
+    'summary',
+    'experience',
+    'education',
+    'skills',
+    'projects',
+  ]);
+
   const handleGeneratePDF = async () => {
     // Build resume JSON (matching v1 schema)
     const resume: Resume = {
@@ -48,7 +58,7 @@ function App() {
         },
         body: JSON.stringify({
           resume,
-          sectionOrder: ['contact', 'summary', 'experience', 'education', 'skills', 'projects'],
+          sectionOrder,
         }),
       });
 
@@ -84,27 +94,48 @@ function App() {
         <p className="subtitle">ATS-friendly resume generator</p>
       </header>
 
-      <main className="form-container">
-        <ContactForm data={contact} onChange={setContact} />
-        <SummaryForm data={summary} onChange={setSummary} />
-        <ExperienceForm data={experience} onChange={setExperience} />
-        <EducationForm data={education} onChange={setEducation} />
-        <SkillsForm data={skills} onChange={setSkills} />
-        <ProjectsForm data={projects} onChange={setProjects} />
+      <div className="main-grid">
+        <main className="form-container">
+          <ContactForm data={contact} onChange={setContact} />
+          <SummaryForm data={summary} onChange={setSummary} />
+          <ExperienceForm data={experience} onChange={setExperience} />
+          <EducationForm data={education} onChange={setEducation} />
+          <SkillsForm data={skills} onChange={setSkills} />
+          <ProjectsForm data={projects} onChange={setProjects} />
 
-        <div className="actions">
-          <button
-            className="btn-primary"
-            onClick={handleGeneratePDF}
-            disabled={!contact.fullName || !contact.email || !contact.phone || !contact.location || !summary.summary}
-          >
-            Generate PDF
-          </button>
-        </div>
-      </main>
+          <div className="actions">
+            <button
+              className="btn-primary"
+              onClick={handleGeneratePDF}
+              disabled={!contact.fullName || !contact.email || !contact.phone || !contact.location || !summary.summary}
+            >
+              Generate PDF
+            </button>
+          </div>
+        </main>
+
+        <aside className="sidebar-center">
+          <div className="sidebar-sticky">
+            <SectionReorder sectionOrder={sectionOrder} onChange={setSectionOrder} />
+          </div>
+        </aside>
+
+        <aside className="sidebar-right">
+          <div className="sidebar-sticky">
+            <div className="preview-placeholder">
+              <h3>PDF Preview</h3>
+              <p className="coming-soon">Coming Soon</p>
+              <p className="preview-note">
+                Future preview will display the exact PDF output to ensure ATS compatibility.
+                No visual editing - what you see will be what you get.
+              </p>
+            </div>
+          </div>
+        </aside>
+      </div>
 
       <footer>
-        <p>QuickCV v2 - All sections available. Section reordering coming soon.</p>
+        <p>QuickCV v2 - Complete with section reordering</p>
       </footer>
     </div>
   );
