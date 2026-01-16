@@ -23,10 +23,13 @@ import {
 
 /**
  * Calculate the size of JSON data in bytes
+ * Browser-safe implementation using TextEncoder
  */
 function getJsonSize(data: unknown): number {
   try {
-    return Buffer.byteLength(JSON.stringify(data), 'utf8');
+    const jsonString = JSON.stringify(data);
+    // TextEncoder is available in both Node.js (v11+) and browsers
+    return new TextEncoder().encode(jsonString).length;
   } catch {
     return 0;
   }
