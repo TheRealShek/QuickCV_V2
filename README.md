@@ -43,7 +43,7 @@ Resume JSON → Validation → Document Model → PDF Rendering
 
 ### Prerequisites
 - Node.js >= 18.0.0
-- npm or equivalent package manager
+- Bun package manager
 
 ### Local Setup
 
@@ -52,13 +52,13 @@ Resume JSON → Validation → Document Model → PDF Rendering
 cd QuickCV_V2
 
 # Install dependencies
-npm install
+bun install
 
 # Build TypeScript
-npm run build
+bun run build
 
 # Type check (optional)
-npm run type-check
+bun run type-check
 ```
 
 ### Project Structure
@@ -155,9 +155,9 @@ See `USER_GUIDE.md` for detailed schema and examples.
 
 **Build Commands:**
 ```bash
-npm run build       # Compile TypeScript
-npm run dev         # Watch mode
-npm run type-check  # Type checking only
+bun run build       # Compile TypeScript
+bun run dev         # Watch mode
+bun run type-check  # Type checking only
 ```
 
 **TypeScript Configuration:**

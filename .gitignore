@@ -45,6 +45,7 @@ temp/
 *.pdf
 output/
 
-# Lock files (keep package-lock.json, ignore others)
+# Lock files (keep bun.lockb, ignore others)
+package-lock.json
 yarn.lock
 pnpm-lock.yaml
