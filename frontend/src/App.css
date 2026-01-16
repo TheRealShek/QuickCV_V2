@@ -117,7 +117,7 @@ header h1 {
 /* Three-column centered canvas layout */
 .main-grid {
   display: grid;
-  grid-template-columns: minmax(280px, 1fr) minmax(500px, 800px) minmax(280px, 1fr);
+  grid-template-columns: minmax(280px, 360px) minmax(500px, 800px) minmax(400px, 2fr);
   gap: 1.5rem;
   align-items: start;
   width: 100%;
@@ -146,7 +146,7 @@ header h1 {
   grid-row: 1;
   position: relative;
   justify-self: start;
-  max-width: 320px;
+  width: 100%;
 }
 
 .sidebar-sticky {
@@ -154,7 +154,148 @@ header h1 {
   top: 2rem;
 }
 
-/* Preview Placeholder */
+/* Preview Container */
+.preview-container {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 180px);
+  min-height: 600px;
+}
+
+.preview-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fafafa;
+  border-radius: 8px 8px 0 0;
+}
+
+.preview-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.btn-preview-refresh {
+  padding: 0.5rem 1rem;
+  background: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-preview-refresh:hover:not(:disabled) {
+  background: #1565c0;
+}
+
+.btn-preview-refresh:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.preview-outdated-notice {
+  padding: 0.5rem 1rem;
+  background: #fff3cd;
+  border-bottom: 1px solid #ffeaa7;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #856404;
+}
+
+.preview-content {
+  flex: 1;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  position: relative;
+  overflow: hidden;
+  background: #f9f9f9;
+}
+
+.preview-empty-state {
+  text-align: center;
+  color: #999;
+  margin: auto;
+}
+
+.preview-empty-state p:first-child {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.preview-hint {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #bbb;
+}
+
+.preview-loading-state {
+  text-align: center;
+  color: #666;
+  margin: auto;
+}
+
+.preview-spinner {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 1rem;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #1976d2;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.preview-loading-state p {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.preview-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: white;
+  flex: 1;
+}
+
+.preview-error-state {
+  text-align: center;
+  padding: 2rem;
+  color: #d32f2f;
+  margin: auto;
+}
+
+.preview-error-title {
+  margin: 0 0 0.75rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.preview-error-message {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #666;
+  line-height: 1.5;
+}
+
+/* Preview Placeholder (legacy - can be removed) */
 .preview-placeholder {
   background: white;
   border: 1px solid #e0e0e0;

@@ -7,7 +7,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch",
+    "dev": "bun --watch server.ts & cd frontend && bun run dev",
     "type-check": "tsc --noEmit",
     "server": "bun run server.ts",
     "server:dev": "bun --watch server.ts"

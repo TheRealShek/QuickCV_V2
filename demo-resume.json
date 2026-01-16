@@ -1,0 +1,125 @@
+{
+  "contact": {
+    "fullName": "Abhishek Thakur",
+    "email": "abhishek@example.com",
+    "phone": "+1 (555) 123-4567",
+    "location": "San Francisco, CA",
+    "linkedin": "linkedin.com/in/abhishekthakur",
+    "github": "github.com/abhishekthakur",
+    "portfolio": "abhishekthakur.dev",
+    "twitter": "@abhishekdev"
+  },
+  "summary": {
+    "summary": "Full-stack software engineer with 5+ years of experience building scalable web applications. Specialized in React, TypeScript, Node.js, and cloud infrastructure. Passionate about creating performant, user-friendly applications and mentoring junior developers."
+  },
+  "experience": [
+    {
+      "company": "TechCorp Inc",
+      "role": "Senior Software Engineer",
+      "location": "San Francisco, CA",
+      "startDate": "2021-03",
+      "endDate": "",
+      "description": [
+        "Led development of microservices architecture serving 2M+ users, improving system reliability by 40%",
+        "Architected and implemented real-time collaboration features using WebSockets and Redis",
+        "Mentored team of 5 junior engineers, establishing code review practices and testing standards",
+        "Reduced API response time by 60% through database query optimization and caching strategies"
+      ]
+    },
+    {
+      "company": "StartupXYZ",
+      "role": "Software Engineer",
+      "location": "Remote",
+      "startDate": "2019-01",
+      "endDate": "2021-02",
+      "description": [
+        "Built and deployed React-based dashboard reducing customer support tickets by 35%",
+        "Implemented CI/CD pipeline using GitHub Actions, reducing deployment time from hours to minutes",
+        "Developed REST APIs serving 500K+ daily requests with 99.9% uptime",
+        "Collaborated with design team to improve UX, increasing user engagement by 25%"
+      ]
+    },
+    {
+      "company": "Digital Agency Co",
+      "role": "Junior Developer",
+      "location": "New York, NY",
+      "startDate": "2017-06",
+      "endDate": "2018-12",
+      "description": [
+        "Developed responsive websites for 15+ clients using HTML, CSS, JavaScript, and WordPress",
+        "Optimized page load times by 50% through image optimization and lazy loading techniques",
+        "Maintained and updated legacy codebases, fixing critical bugs and improving performance"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "University of California, Berkeley",
+      "degree": "Bachelor of Science",
+      "fieldOfStudy": "Computer Science",
+      "startDate": "2013-09",
+      "endDate": "2017-05"
+    }
+  ],
+  "skills": {
+    "skills": [
+      "JavaScript/TypeScript",
+      "React",
+      "Node.js",
+      "Python",
+      "SQL/PostgreSQL",
+      "MongoDB",
+      "AWS (EC2, S3, Lambda)",
+      "Docker",
+      "Kubernetes",
+      "Git",
+      "CI/CD",
+      "REST APIs",
+      "GraphQL",
+      "Jest/Testing",
+      "Agile/Scrum"
+    ]
+  },
+  "projects": [
+    {
+      "name": "DevTools Dashboard",
+      "description": [
+        "Open-source developer productivity dashboard with real-time metrics and integrations",
+        "1000+ GitHub stars and 50+ contributors",
+        "Integrates with GitHub, Jira, and Slack APIs",
+        "Featured in Dev.to's top open-source projects of 2023"
+      ],
+      "techStack": [
+        "React",
+        "TypeScript",
+        "Node.js",
+        "PostgreSQL"
+      ],
+      "link": "github.com/abhishekthakur/devtools-dashboard"
+    },
+    {
+      "name": "Resume Builder API",
+      "description": [
+        "RESTful API for generating ATS-friendly resumes with PDF export functionality",
+        "Processes 10K+ resume generations per month",
+        "99.8% uptime with automated monitoring and alerts",
+        "Comprehensive test coverage with Jest (95%+ coverage)"
+      ],
+      "techStack": [
+        "Node.js",
+        "Express",
+        "PDFKit",
+        "MongoDB"
+      ],
+      "link": "github.com/abhishekthakur/resume-api"
+    }
+  ],
+  "sectionOrder": [
+    "contact",
+    "summary",
+    "experience",
+    "education",
+    "skills",
+    "projects"
+  ]
+}

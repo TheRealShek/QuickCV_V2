@@ -123,10 +123,21 @@ function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Preview state management
+  const [previewState, setPreviewState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+  const [isPreviewOutdated, setIsPreviewOutdated] = useState(false);
+  const lastPreviewDataRef = useRef<string>('');
+
   // Mark as changed whenever state updates
   useEffect(() => {
     hasChangesRef.current = true;
-  }, [contact, summary, experience, education, skills, projects, sectionOrder]);
+    // Mark preview as outdated if data changes after preview was generated
+    if (previewState === 'ready') {
+      setIsPreviewOutdated(true);
+    }
+  }, [contact, summary, experience, education, skills, projects, sectionOrder, previewState]);
 
   // Update relative time message every second (stop after 1 minute)
   useEffect(() => {
@@ -281,6 +292,63 @@ function App() {
     document.body.removeChild(a);
   };
 
+  const handleRefreshPreview = async () => {
+    // Build resume JSON
+    const resume: Resume = {
+      contact,
+      summary,
+      experience,
+      education,
+      skills,
+      projects,
+    };
+
+    const requestData = {
+      resume,
+      sectionOrder,
+    };
+
+    const currentDataString = JSON.stringify(requestData);
+
+    setPreviewState('loading');
+    setPreviewError(null);
+
+    try {
+      const response = await fetch('http://localhost:3000/generate-pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: currentDataString,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('Preview generation failed:', error);
+        setPreviewError(error.error || 'Failed to generate preview');
+        setPreviewState('error');
+        return;
+      }
+
+      // Revoke old preview URL to free memory
+      if (previewUrl) {
+        window.URL.revokeObjectURL(previewUrl);
+      }
+
+      // Create new preview
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      setPreviewUrl(url);
+      lastPreviewDataRef.current = currentDataString;
+      setIsPreviewOutdated(false);
+      setPreviewState('ready');
+    } catch (error) {
+      console.error('Preview error:', error);
+      setPreviewError('Failed to connect to backend. Make sure the server is running.');
+      setPreviewState('error');
+    }
+  };
+
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -413,13 +481,54 @@ function App() {
 
         <aside className="sidebar-right">
           <div className="sidebar-sticky">
-            <div className="preview-placeholder">
-              <h3>PDF Preview</h3>
-              <p className="coming-soon">Coming Soon</p>
-              <p className="preview-note">
-                Future preview will display the exact PDF output to ensure ATS compatibility.
-                No visual editing - what you see will be what you get.
-              </p>
+            <div className="preview-container">
+              <div className="preview-header">
+                <h3>Preview</h3>
+                <button
+                  className="btn-preview-refresh"
+                  onClick={handleRefreshPreview}
+                  disabled={previewState === 'loading'}
+                >
+                  {previewState === 'loading' ? 'Loading...' : 'Refresh Preview'}
+                </button>
+              </div>
+
+              {isPreviewOutdated && previewState === 'ready' && (
+                <div className="preview-outdated-notice">
+                  Preview may be outdated
+                </div>
+              )}
+
+              <div className="preview-content">
+                {previewState === 'idle' && (
+                  <div className="preview-empty-state">
+                    <p>No preview yet</p>
+                    <p className="preview-hint">Click "Refresh Preview" to generate</p>
+                  </div>
+                )}
+
+                {previewState === 'loading' && (
+                  <div className="preview-loading-state">
+                    <div className="preview-spinner"></div>
+                    <p>Generating preview...</p>
+                  </div>
+                )}
+
+                {previewState === 'ready' && previewUrl && (
+                  <iframe
+                    src={previewUrl}
+                    className="preview-iframe"
+                    title="PDF Preview"
+                  />
+                )}
+
+                {previewState === 'error' && (
+                  <div className="preview-error-state">
+                    <p className="preview-error-title">Preview Failed</p>
+                    <p className="preview-error-message">{previewError}</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </aside>
