@@ -1,13 +1,13 @@
 {
   "contact": {
-    "fullName": "Abhishek Thakur",
-    "email": "abhishek@example.com",
-    "phone": "+1 (555) 123-4567",
-    "location": "San Francisco, CA",
-    "linkedin": "linkedin.com/in/abhishekthakur",
-    "github": "github.com/abhishekthakur",
-    "portfolio": "abhishekthakur.dev",
-    "twitter": "@abhishekdev"
+    "fullName": "Jane Smith",
+    "email": "jane.smith@example.com",
+    "phone": "+1 (555) 234-5678",
+    "location": "Austin, TX",
+    "linkedin": "linkedin.com/in/janesmith",
+    "github": "github.com/janesmith",
+    "portfolio": "janesmith.dev",
+    "twitter": "@janesmith"
   },
   "summary": {
     "summary": "Full-stack software engineer with 5+ years of experience building scalable web applications. Specialized in React, TypeScript, Node.js, and cloud infrastructure. Passionate about creating performant, user-friendly applications and mentoring junior developers."
@@ -63,21 +63,22 @@
   ],
   "skills": {
     "skills": [
-      "JavaScript/TypeScript",
       "React",
+      "TypeScript",
       "Node.js",
-      "Python",
-      "SQL/PostgreSQL",
+      "Backend: Python",
+      "Backend: Django",
+      "PostgreSQL",
       "MongoDB",
-      "AWS (EC2, S3, Lambda)",
+      "Cloud & DevOps: AWS",
       "Docker",
       "Kubernetes",
       "Git",
       "CI/CD",
-      "REST APIs",
-      "GraphQL",
-      "Jest/Testing",
-      "Agile/Scrum"
+      "API: REST APIs",
+      "API: GraphQL",
+      "Testing: Jest",
+      "Architecture: Microservices"
     ]
   },
   "projects": [
@@ -95,7 +96,7 @@
         "Node.js",
         "PostgreSQL"
       ],
-      "link": "github.com/abhishekthakur/devtools-dashboard"
+      "link": "github.com/janesmith/devtools-dashboard"
     },
     {
       "name": "Resume Builder API",
@@ -111,7 +112,7 @@
         "PDFKit",
         "MongoDB"
       ],
-      "link": "github.com/abhishekthakur/resume-api"
+      "link": "github.com/janesmith/resume-api"
     }
   ],
   "sectionOrder": [

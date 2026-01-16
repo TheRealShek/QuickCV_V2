@@ -81,6 +81,9 @@ function App() {
     loadFromStorage('densityPreset', 'normal')
   );
 
+  const [activeSection, setActiveSection] = useState<SectionKey>('contact');
+  const [expandedAppearanceSection, setExpandedAppearanceSection] = useState<'font' | 'density' | null>(null);
+
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving'>('idle');
   const [lastSaveTime, setLastSaveTime] = useState<number | null>(null);
   const hasChangesRef = useRef(false);
@@ -479,93 +482,160 @@ function App() {
 
       <div className="main-grid">
         <main className="form-container">
-          <ContactForm data={contact} onChange={setContact} />
-          <SummaryForm data={summary} onChange={setSummary} />
-          <ExperienceForm data={experience} onChange={setExperience} />
-          <EducationForm data={education} onChange={setEducation} />
-          <SkillsForm data={skills} onChange={setSkills} />
-          <ProjectsForm data={projects} onChange={setProjects} />
+          {/* Section Navigation */}
+          <div className="section-tabs-wrapper">
+            <div className="section-tabs">
+              <button 
+                className={`section-tab ${activeSection === 'contact' ? 'active' : ''}`}
+                onClick={() => setActiveSection('contact')}
+              >
+                Contact
+              </button>
+              <button 
+                className={`section-tab ${activeSection === 'summary' ? 'active' : ''}`}
+                onClick={() => setActiveSection('summary')}
+              >
+                Summary
+              </button>
+              <button 
+                className={`section-tab ${activeSection === 'experience' ? 'active' : ''}`}
+                onClick={() => setActiveSection('experience')}
+              >
+                Experience
+              </button>
+              <button 
+                className={`section-tab ${activeSection === 'education' ? 'active' : ''}`}
+                onClick={() => setActiveSection('education')}
+              >
+                Education
+              </button>
+              <button 
+                className={`section-tab ${activeSection === 'skills' ? 'active' : ''}`}
+                onClick={() => setActiveSection('skills')}
+              >
+                Skills
+              </button>
+              <button 
+                className={`section-tab ${activeSection === 'projects' ? 'active' : ''}`}
+                onClick={() => setActiveSection('projects')}
+              >
+                Projects
+              </button>
+            </div>
+          </div>
+
+          {/* Section Content */}
+          <div className="section-content">
+            {activeSection === 'contact' && <ContactForm data={contact} onChange={setContact} />}
+            {activeSection === 'summary' && <SummaryForm data={summary} onChange={setSummary} />}
+            {activeSection === 'experience' && <ExperienceForm data={experience} onChange={setExperience} />}
+            {activeSection === 'education' && <EducationForm data={education} onChange={setEducation} />}
+            {activeSection === 'skills' && <SkillsForm data={skills} onChange={setSkills} />}
+            {activeSection === 'projects' && <ProjectsForm data={projects} onChange={setProjects} />}
+          </div>
         </main>
 
         <aside className="sidebar-center">
           <div className="sidebar-sticky">
             <SectionReorder sectionOrder={sectionOrder} onChange={setSectionOrder} />
             
-            <div className="font-selector">
-              <h3>Font Style</h3>
-              <div className="font-options">
-                <label className={`font-option ${fontProfile === 'sans' ? 'active' : ''}`}>
-                  <input
-                    type="radio"
-                    name="fontProfile"
-                    value="sans"
-                    checked={fontProfile === 'sans'}
-                    onChange={(e) => setFontProfile(e.target.value as FontProfile)}
-                  />
-                  <span>Sans-Serif</span>
-                  <span className="font-example">Modern & Clean</span>
-                </label>
-                <label className={`font-option ${fontProfile === 'serif' ? 'active' : ''}`}>
-                  <input
-                    type="radio"
-                    name="fontProfile"
-                    value="serif"
-                    checked={fontProfile === 'serif'}
-                    onChange={(e) => setFontProfile(e.target.value as FontProfile)}
-                  />
-                  <span>Serif</span>
-                  <span className="font-example">Traditional & Formal</span>
-                </label>
-                <label className={`font-option ${fontProfile === 'mono' ? 'active' : ''}`}>
-                  <input
-                    type="radio"
-                    name="fontProfile"
-                    value="mono"
-                    checked={fontProfile === 'mono'}
-                    onChange={(e) => setFontProfile(e.target.value as FontProfile)}
-                  />
-                  <span>Monospace</span>
-                  <span className="font-example">Tech & Precise</span>
-                </label>
+            <div className="appearance-panel">
+              <h2>Appearance</h2>
+              
+              <div className="appearance-section">
+                <h3 
+                  className={`appearance-section-header ${expandedAppearanceSection === 'font' ? 'expanded' : ''}`}
+                  onClick={() => setExpandedAppearanceSection(expandedAppearanceSection === 'font' ? null : 'font')}
+                >
+                  Font Style
+                  <span className="accordion-icon">{expandedAppearanceSection === 'font' ? '−' : '+'}</span>
+                </h3>
+                {expandedAppearanceSection === 'font' && (
+                  <div className="radio-group">
+                    <label className="radio-label">
+                      <input
+                        type="radio"
+                        name="fontProfile"
+                        value="sans"
+                        checked={fontProfile === 'sans'}
+                        onChange={(e) => setFontProfile(e.target.value as FontProfile)}
+                      />
+                      <span>Sans-Serif</span>
+                      <span className="help-text-inline">Modern & Clean</span>
+                    </label>
+                    <label className="radio-label">
+                      <input
+                        type="radio"
+                        name="fontProfile"
+                        value="serif"
+                        checked={fontProfile === 'serif'}
+                        onChange={(e) => setFontProfile(e.target.value as FontProfile)}
+                      />
+                      <span>Serif</span>
+                      <span className="help-text-inline">Traditional & Formal</span>
+                    </label>
+                    <label className="radio-label">
+                      <input
+                        type="radio"
+                        name="fontProfile"
+                        value="mono"
+                        checked={fontProfile === 'mono'}
+                        onChange={(e) => setFontProfile(e.target.value as FontProfile)}
+                      />
+                      <span>Monospace</span>
+                      <span className="help-text-inline">Tech & Precise</span>
+                    </label>
+                  </div>
+                )}
               </div>
-            </div>
 
-            <div className="density-selector">
-              <h3>Layout Density</h3>
-              <div className="density-options">
-                <label className={`density-option ${densityPreset === 'normal' ? 'active' : ''}`}>
-                  <input
-                    type="radio"
-                    name="densityPreset"
-                    value="normal"
-                    checked={densityPreset === 'normal'}
-                    onChange={(e) => setDensityPreset(e.target.value as DensityPreset)}
-                  />
-                  <span>Normal</span>
-                  <span className="density-hint">Comfortable spacing</span>
-                </label>
-                <label className={`density-option ${densityPreset === 'compact' ? 'active' : ''}`}>
-                  <input
-                    type="radio"
-                    name="densityPreset"
-                    value="compact"
-                    checked={densityPreset === 'compact'}
-                    onChange={(e) => setDensityPreset(e.target.value as DensityPreset)}
-                  />
-                  <span>Compact</span>
-                  <span className="density-hint">Tighter spacing</span>
-                </label>
-                <label className={`density-option ${densityPreset === 'ultra-compact' ? 'active' : ''}`}>
-                  <input
-                    type="radio"
-                    name="densityPreset"
-                    value="ultra-compact"
-                    checked={densityPreset === 'ultra-compact'}
-                    onChange={(e) => setDensityPreset(e.target.value as DensityPreset)}
-                  />
-                  <span>Ultra-Compact</span>
-                  <span className="density-hint">Maximum density</span>
-                </label>
+              <div className="appearance-divider"></div>
+
+              <div className="appearance-section">
+                <h3 
+                  className={`appearance-section-header ${expandedAppearanceSection === 'density' ? 'expanded' : ''}`}
+                  onClick={() => setExpandedAppearanceSection(expandedAppearanceSection === 'density' ? null : 'density')}
+                >
+                  Layout Density
+                  <span className="accordion-icon">{expandedAppearanceSection === 'density' ? '−' : '+'}</span>
+                </h3>
+                {expandedAppearanceSection === 'density' && (
+                  <div className="radio-group">
+                    <label className="radio-label">
+                      <input
+                        type="radio"
+                        name="densityPreset"
+                        value="normal"
+                        checked={densityPreset === 'normal'}
+                        onChange={(e) => setDensityPreset(e.target.value as DensityPreset)}
+                      />
+                      <span>Normal</span>
+                      <span className="help-text-inline">Comfortable spacing</span>
+                    </label>
+                    <label className="radio-label">
+                      <input
+                        type="radio"
+                        name="densityPreset"
+                        value="compact"
+                        checked={densityPreset === 'compact'}
+                        onChange={(e) => setDensityPreset(e.target.value as DensityPreset)}
+                      />
+                      <span>Compact</span>
+                      <span className="help-text-inline">Tighter spacing</span>
+                    </label>
+                    <label className="radio-label">
+                      <input
+                        type="radio"
+                        name="densityPreset"
+                        value="ultra-compact"
+                        checked={densityPreset === 'ultra-compact'}
+                        onChange={(e) => setDensityPreset(e.target.value as DensityPreset)}
+                      />
+                      <span>Ultra-Compact</span>
+                      <span className="help-text-inline">Maximum density</span>
+                    </label>
+                  </div>
+                )}
               </div>
             </div>
           </div>

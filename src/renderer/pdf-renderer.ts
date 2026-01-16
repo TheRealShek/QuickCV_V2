@@ -125,6 +125,75 @@ function renderParagraph(state: RendererState, element: ParagraphElement): void 
 }
 
 /**
+ * Link detection helper - identifies URLs and emails in text
+ */
+interface LinkMatch {
+  text: string;
+  start: number;
+  end: number;
+  url: string;
+}
+
+/**
+ * Find all URLs and emails in a text string
+ */
+function findLinks(text: string): LinkMatch[] {
+  const links: LinkMatch[] = [];
+  
+  // Email pattern: simple but effective for ATS-safe emails
+  const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g;
+  
+  // URL pattern: matches common URL formats (with or without protocol)
+  // Matches: example.com, www.example.com, https://example.com, github.com/user
+  const urlRegex = /\b(?:https?:\/\/)?(?:www\.)?[a-z0-9-]+(?:\.[a-z0-9-]+)+(?:\/[^\s]*)?/gi;
+  
+  // Find emails
+  let match: RegExpExecArray | null;
+  while ((match = emailRegex.exec(text)) !== null) {
+    links.push({
+      text: match[0],
+      start: match.index,
+      end: match.index + match[0].length,
+      url: `mailto:${match[0]}`,
+    });
+  }
+  
+  // Find URLs (excluding already matched emails)
+  const emailPositions = new Set<number>();
+  links.forEach(link => {
+    for (let i = link.start; i < link.end; i++) {
+      emailPositions.add(i);
+    }
+  });
+  
+  urlRegex.lastIndex = 0;
+  while ((match = urlRegex.exec(text)) !== null) {
+    // Skip if this position overlaps with an email
+    if (emailPositions.has(match.index)) continue;
+    
+    const matchedText = match[0];
+    let url = matchedText;
+    
+    // Add protocol if missing
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      url = `https://${url}`;
+    }
+    
+    links.push({
+      text: matchedText,
+      start: match.index,
+      end: match.index + matchedText.length,
+      url: url,
+    });
+  }
+  
+  // Sort by position
+  links.sort((a, b) => a.start - b.start);
+  
+  return links;
+}
+
+/**
  * Render a text line element
  */
 function renderTextLine(state: RendererState, element: TextLineElement): void {
@@ -139,6 +208,8 @@ function renderTextLine(state: RendererState, element: TextLineElement): void {
   
   checkPageBreak(state, lineHeight);
   
+  const startY = state.currentY;
+  
   // Render text line
   state.doc
     .font(state.fonts.main)
@@ -147,6 +218,27 @@ function renderTextLine(state: RendererState, element: TextLineElement): void {
       width: CONTENT_WIDTH,
       align: 'left',
     });
+  
+  // Add clickable link annotations (no visual change)
+  const links = findLinks(element.text);
+  if (links.length > 0) {
+    links.forEach(link => {
+      // Measure text width up to link start to calculate X position
+      const textBeforeLink = element.text.substring(0, link.start);
+      const textWidthBefore = state.doc.widthOfString(textBeforeLink);
+      
+      // Measure link text width
+      const linkWidth = state.doc.widthOfString(link.text);
+      
+      // Calculate link bounds
+      const linkX = PAGE_CONFIG.marginLeft + textWidthBefore;
+      const linkY = startY;
+      const linkHeight = lineHeight;
+      
+      // Add invisible link annotation (no underline, no color change)
+      state.doc.link(linkX, linkY, linkWidth, linkHeight, link.url);
+    });
+  }
   
   // Update Y position with special spacing for contact line
   const spacingAfter = isContactLine ? state.config.spacing.afterContactLine : state.config.spacing.afterTextLine;
