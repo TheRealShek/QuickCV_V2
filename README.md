@@ -132,8 +132,33 @@ The resume data model is **fixed** and includes only:
 - **Professional Summary**: 2-4 sentence plain text
 - **Work Experience**: company, role, dates, description bullets
 - **Education**: institution, degree, field, dates
-- **Skills**: flat list (no categorization)
+- **Skills**: flat list with automatic categorization in PDF output
 - **Projects**: name, description, tech stack, link
+
+### Skills Categorization
+
+Skills are stored as a flat array but automatically grouped in PDF output:
+
+**Input (JSON):**
+```json
+{
+  "skills": {
+    "skills": ["React", "AWS", "Frontend: Elm", "PostgreSQL"]
+  }
+}
+```
+
+**Output (PDF):**
+```
+Frontend: React, Elm
+Database: PostgreSQL
+Cloud & DevOps: AWS
+```
+
+- **Automatic**: Keyword-based grouping into 17 categories
+- **Override**: Prefix skills with `Category: Skill` to force placement
+- **ATS-Safe**: Prefix stripped in final output, plain text preserved
+- **Deterministic**: Stable category order, unknown skills → Other
 
 See `USER_GUIDE.md` for detailed schema and examples.
 

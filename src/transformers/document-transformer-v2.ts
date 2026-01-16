@@ -176,7 +176,133 @@ function transformEducationSection(resume: Resume): DocumentElement[] {
 }
 
 /**
- * Transform skills section to document elements
+ * Skill category mapping (deterministic, keyword-based)
+ */
+const SKILL_CATEGORIES = {
+  'Frontend': [
+    'react', 'vue', 'angular', 'svelte', 'next', 'nuxt', 'gatsby',
+    'typescript', 'javascript', 'html', 'css', 'sass', 'scss', 'tailwind',
+    'redux', 'mobx', 'webpack', 'vite', 'babel', 'jest', 'testing-library'
+  ],
+  'Backend': [
+    'node', 'express', 'fastify', 'nest', 'koa',
+    'python', 'django', 'flask', 'fastapi',
+    'java', 'spring', 'kotlin',
+    'go', 'golang', 'gin',
+    'ruby', 'rails',
+    'php', 'laravel',
+    'graphql', 'rest', 'api', 'grpc'
+  ],
+  'Database': [
+    'postgres', 'postgresql', 'mysql', 'sqlite', 'mariadb',
+    'mongodb', 'dynamodb', 'redis', 'elasticsearch',
+    'sql', 'nosql', 'prisma', 'typeorm', 'sequelize', 'mongoose'
+  ],
+  'Cloud & DevOps': [
+    'aws', 'azure', 'gcp', 'google cloud',
+    'docker', 'kubernetes', 'k8s',
+    'terraform', 'ansible', 'jenkins', 'github actions', 'gitlab ci',
+    'ci/cd', 'serverless', 'lambda', 'cloudformation'
+  ],
+  'Tools': [
+    'git', 'github', 'gitlab', 'bitbucket',
+    'jira', 'confluence', 'slack',
+    'vscode', 'vim', 'postman', 'figma',
+    'linux', 'bash', 'shell'
+  ]
+} as const;
+
+/**
+ * Category name normalization for user-provided prefixes
+ * Maps case-insensitive variations to canonical category names
+ */
+const CATEGORY_ALIASES: Record<string, string> = {
+  'frontend': 'Frontend',
+  'backend': 'Backend',
+  'database': 'Database',
+  'cloud': 'Cloud & DevOps',
+  'clouddevops': 'Cloud & DevOps',
+  'cloud & devops': 'Cloud & DevOps',
+  'cloud&devops': 'Cloud & DevOps',
+  'devops': 'Cloud & DevOps',
+  'mobile': 'Mobile',
+  'ios': 'Mobile',
+  'android': 'Mobile',
+  'api': 'API',
+  'apis': 'API',
+  'testing': 'Testing',
+  'qa': 'Testing',
+  'security': 'Security',
+  'auth': 'Security',
+  'data': 'Data',
+  'analytics': 'Data',
+  'ml': 'AI & ML',
+  'ai': 'AI & ML',
+  'ai & ml': 'AI & ML',
+  'ai&ml': 'AI & ML',
+  'devtools': 'Tools',
+  'cli': 'Tools',
+  'tools': 'Tools',
+  'os': 'Operating Systems',
+  'linux': 'Operating Systems',
+  'windows': 'Operating Systems',
+  'operating systems': 'Operating Systems',
+  'networking': 'Networking',
+  'architecture': 'Architecture',
+  'system design': 'Architecture',
+  'cms': 'CMS',
+  'game': 'Game Development',
+  'gamedev': 'Game Development',
+  'game development': 'Game Development',
+  'other': 'Other'
+};
+
+/**
+ * Parse skill with optional category prefix (e.g., "Cloud: OpenTelemetry")
+ * Returns { category, skill } where category is either user-provided or auto-detected
+ */
+function parseSkillWithCategory(skillInput: string): { category: string; skill: string } {
+  const trimmed = skillInput.trim();
+  
+  // Check for category prefix pattern "Category: Skill"
+  const colonIndex = trimmed.indexOf(': ');
+  
+  if (colonIndex > 0) {
+    const rawCategory = trimmed.substring(0, colonIndex).trim();
+    const skillName = trimmed.substring(colonIndex + 2).trim();
+    
+    // Validate both parts are non-empty
+    if (rawCategory.length > 0 && skillName.length > 0) {
+      // Normalize category name via aliases
+      const normalizedCategory = CATEGORY_ALIASES[rawCategory.toLowerCase()] || 'Other';
+      return { category: normalizedCategory, skill: skillName };
+    }
+  }
+  
+  // No valid prefix found - use keyword-based categorization
+  return { category: categorizeSkillByKeyword(trimmed), skill: trimmed };
+}
+
+/**
+ * Categorize a skill based on keyword matching (internal helper)
+ */
+function categorizeSkillByKeyword(skill: string): string {
+  const normalizedSkill = skill.toLowerCase().trim();
+  
+  for (const [category, keywords] of Object.entries(SKILL_CATEGORIES)) {
+    for (const keyword of keywords) {
+      if (normalizedSkill.includes(keyword)) {
+        return category;
+      }
+    }
+  }
+  
+  return 'Other';
+}
+
+/**
+ * Transform skills section to document elements with categorization
+ * Supports both automatic keyword-based categorization and user-provided category prefixes
  */
 function transformSkillsSection(resume: Resume): DocumentElement[] {
   const elements: DocumentElement[] = [];
@@ -185,8 +311,47 @@ function transformSkillsSection(resume: Resume): DocumentElement[] {
   
   elements.push({ type: 'HEADING', level: 2, text: 'Skills' });
   
-  const skillsText = resume.skills.skills.join(', ');
-  elements.push({ type: 'TEXT_LINE', text: skillsText });
+  // Group skills by category
+  const categorizedSkills = new Map<string, string[]>();
+  
+  for (const skillInput of resume.skills.skills) {
+    const { category, skill } = parseSkillWithCategory(skillInput);
+    
+    if (!categorizedSkills.has(category)) {
+      categorizedSkills.set(category, []);
+    }
+    categorizedSkills.get(category)!.push(skill);
+  }
+  
+  // Stable category order
+  const categoryOrder = [
+    'Frontend',
+    'Backend',
+    'Mobile',
+    'Database',
+    'Cloud & DevOps',
+    'API',
+    'Testing',
+    'Security',
+    'Data',
+    'AI & ML',
+    'Tools',
+    'Operating Systems',
+    'Networking',
+    'Architecture',
+    'CMS',
+    'Game Development',
+    'Other'
+  ];
+  
+  // Emit one TEXT_LINE per category
+  for (const category of categoryOrder) {
+    if (categorizedSkills.has(category)) {
+      const skills = categorizedSkills.get(category)!;
+      const categoryLine = `${category}: ${skills.join(', ')}`;
+      elements.push({ type: 'TEXT_LINE', text: categoryLine });
+    }
+  }
   
   return elements;
 }

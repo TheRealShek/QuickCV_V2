@@ -242,9 +242,57 @@ const pdfBuffer = await generatePDFFromDocument(document);
 - Plain text only (no formatting)
 
 ### Skills
-- Flat list only (no categories)
-- Comma-separated in PDF output
+
+**Storage:**
+- Entered as flat array of strings: `["React", "AWS", "PostgreSQL"]`
+- No categories in JSON schema
 - Maximum 100 skills (enforced by validation)
+
+**Automatic Categorization:**
+- Skills are automatically grouped by keywords during PDF generation
+- Categories: Frontend, Backend, Mobile, Database, Cloud & DevOps, API, Testing, Security, Data, AI & ML, Tools, Operating Systems, Networking, Architecture, CMS, Game Development, Other
+- Unknown skills default to "Other" category
+- Deterministic and stable ordering
+
+**User Override:**
+- Prefix any skill with `Category: ` to force specific categorization
+- Prefix is stripped in PDF output (invisible to readers)
+- Examples:
+  - `"Frontend: Elm"` → Frontend category
+  - `"AI & ML: TensorFlow"` → AI & ML category
+  - `"Mobile: Flutter"` → Mobile category
+
+**PDF Output Format:**
+```
+Frontend: React, TypeScript, Elm
+Backend: Node.js, Python
+Cloud & DevOps: AWS, Docker
+AI & ML: TensorFlow
+Other: UnknownTool
+```
+
+**Example Input:**
+```json
+{
+  "skills": {
+    "skills": [
+      "React",
+      "AWS",
+      "Frontend: Elm",
+      "AI & ML: TensorFlow",
+      "PostgreSQL"
+    ]
+  }
+}
+```
+
+**Resulting PDF:**
+```
+Frontend: React, Elm
+Database: PostgreSQL
+Cloud & DevOps: AWS
+AI & ML: TensorFlow
+```
 
 ### Links
 - Include protocol-less URLs: "github.com/user" or full "https://github.com/user"
@@ -268,7 +316,6 @@ Common validation error types:
 
 **Schema:**
 - Custom sections beyond the defined 6 sections
-- Nested skills categories or grouping
 - Multiple summary sections
 - Rich text or formatting in any field
 - Metadata (IDs, timestamps in rendered output)
