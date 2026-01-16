@@ -49,3 +49,6 @@ output/
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
+
+#Self Files
+PROJECT_GUIDELINES.md
