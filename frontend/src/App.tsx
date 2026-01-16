@@ -8,7 +8,7 @@ import { SkillsForm } from './components/SkillsForm';
 import { ProjectsForm } from './components/ProjectsForm';
 import { SectionReorder } from './components/SectionReorder';
 import { validateResume } from '@backend/validators/resume-validator';
-import type { Resume, ContactInfo, ProfessionalSummary, WorkExperience, Education, Skills, Project, SectionKey } from './types';
+import type { Resume, ContactInfo, ProfessionalSummary, WorkExperience, Education, Skills, Project, SectionKey, FontProfile, DensityPreset } from './types';
 import './App.css';
 
 const STORAGE_KEY = 'quickcv_resume_data';
@@ -73,6 +73,14 @@ function App() {
     ])
   );
 
+  const [fontProfile, setFontProfile] = useState<FontProfile>(() =>
+    loadFromStorage('fontProfile', 'sans')
+  );
+
+  const [densityPreset, setDensityPreset] = useState<DensityPreset>(() =>
+    loadFromStorage('densityPreset', 'normal')
+  );
+
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving'>('idle');
   const [lastSaveTime, setLastSaveTime] = useState<number | null>(null);
   const hasChangesRef = useRef(false);
@@ -86,6 +94,8 @@ function App() {
   const skillsRef = useRef(skills);
   const projectsRef = useRef(projects);
   const sectionOrderRef = useRef(sectionOrder);
+  const fontProfileRef = useRef(fontProfile);
+  const densityPresetRef = useRef(densityPreset);
 
   // Keep refs in sync with state
   useEffect(() => { contactRef.current = contact; }, [contact]);
@@ -95,6 +105,8 @@ function App() {
   useEffect(() => { skillsRef.current = skills; }, [skills]);
   useEffect(() => { projectsRef.current = projects; }, [projects]);
   useEffect(() => { sectionOrderRef.current = sectionOrder; }, [sectionOrder]);
+  useEffect(() => { fontProfileRef.current = fontProfile; }, [fontProfile]);
+  useEffect(() => { densityPresetRef.current = densityPreset; }, [densityPreset]);
 
   // Calculate relative time message
   const getRelativeTimeMessage = (): string => {
@@ -128,6 +140,7 @@ function App() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [isPreviewOutdated, setIsPreviewOutdated] = useState(false);
+  const [previewPageCount, setPreviewPageCount] = useState<number | null>(null);
   const lastPreviewDataRef = useRef<string>('');
 
   // Mark as changed whenever state updates
@@ -137,7 +150,7 @@ function App() {
     if (previewState === 'ready') {
       setIsPreviewOutdated(true);
     }
-  }, [contact, summary, experience, education, skills, projects, sectionOrder, previewState]);
+  }, [contact, summary, experience, education, skills, projects, sectionOrder, fontProfile, previewState]);
 
   // Update relative time message every second (stop after 1 minute)
   useEffect(() => {
@@ -173,6 +186,8 @@ function App() {
           skills: skillsRef.current,
           projects: projectsRef.current,
           sectionOrder: sectionOrderRef.current,
+          fontProfile: fontProfileRef.current,
+          densityPreset: densityPresetRef.current,
         };
         const dataString = JSON.stringify(data);
 
@@ -230,6 +245,8 @@ function App() {
         body: JSON.stringify({
           resume,
           sectionOrder,
+          fontProfile,
+          densityPreset,
         }),
       });
 
@@ -306,6 +323,8 @@ function App() {
     const requestData = {
       resume,
       sectionOrder,
+      fontProfile,
+      densityPreset,
     };
 
     const currentDataString = JSON.stringify(requestData);
@@ -335,10 +354,15 @@ function App() {
         window.URL.revokeObjectURL(previewUrl);
       }
 
+      // Extract page count from response header
+      const pageCountHeader = response.headers.get('X-PDF-Page-Count');
+      const pageCount = pageCountHeader ? parseInt(pageCountHeader, 10) : null;
+
       // Create new preview
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       setPreviewUrl(url);
+      setPreviewPageCount(pageCount);
       lastPreviewDataRef.current = currentDataString;
       setIsPreviewOutdated(false);
       setPreviewState('ready');
@@ -370,7 +394,7 @@ function App() {
 
       if (!validationResult.isValid) {
         const errorMsg = validationResult.errors
-          .map((err) => `${err.field}: ${err.message}`)
+          .map((err: any) => `${err.field}: ${err.message}`)
           .join('\n');
         alert(`Validation failed:\n\n${errorMsg}`);
         return;
@@ -461,26 +485,104 @@ function App() {
           <EducationForm data={education} onChange={setEducation} />
           <SkillsForm data={skills} onChange={setSkills} />
           <ProjectsForm data={projects} onChange={setProjects} />
-
-          <div className="actions">
-            <button
-              className="btn-primary"
-              onClick={handleGeneratePDF}
-              disabled={!contact.fullName || !contact.email || !contact.phone || !contact.location || !summary.summary}
-            >
-              Generate PDF
-            </button>
-          </div>
         </main>
 
         <aside className="sidebar-center">
           <div className="sidebar-sticky">
             <SectionReorder sectionOrder={sectionOrder} onChange={setSectionOrder} />
+            
+            <div className="font-selector">
+              <h3>Font Style</h3>
+              <div className="font-options">
+                <label className={`font-option ${fontProfile === 'sans' ? 'active' : ''}`}>
+                  <input
+                    type="radio"
+                    name="fontProfile"
+                    value="sans"
+                    checked={fontProfile === 'sans'}
+                    onChange={(e) => setFontProfile(e.target.value as FontProfile)}
+                  />
+                  <span>Sans-Serif</span>
+                  <span className="font-example">Modern & Clean</span>
+                </label>
+                <label className={`font-option ${fontProfile === 'serif' ? 'active' : ''}`}>
+                  <input
+                    type="radio"
+                    name="fontProfile"
+                    value="serif"
+                    checked={fontProfile === 'serif'}
+                    onChange={(e) => setFontProfile(e.target.value as FontProfile)}
+                  />
+                  <span>Serif</span>
+                  <span className="font-example">Traditional & Formal</span>
+                </label>
+                <label className={`font-option ${fontProfile === 'mono' ? 'active' : ''}`}>
+                  <input
+                    type="radio"
+                    name="fontProfile"
+                    value="mono"
+                    checked={fontProfile === 'mono'}
+                    onChange={(e) => setFontProfile(e.target.value as FontProfile)}
+                  />
+                  <span>Monospace</span>
+                  <span className="font-example">Tech & Precise</span>
+                </label>
+              </div>
+            </div>
+
+            <div className="density-selector">
+              <h3>Layout Density</h3>
+              <div className="density-options">
+                <label className={`density-option ${densityPreset === 'normal' ? 'active' : ''}`}>
+                  <input
+                    type="radio"
+                    name="densityPreset"
+                    value="normal"
+                    checked={densityPreset === 'normal'}
+                    onChange={(e) => setDensityPreset(e.target.value as DensityPreset)}
+                  />
+                  <span>Normal</span>
+                  <span className="density-hint">Comfortable spacing</span>
+                </label>
+                <label className={`density-option ${densityPreset === 'compact' ? 'active' : ''}`}>
+                  <input
+                    type="radio"
+                    name="densityPreset"
+                    value="compact"
+                    checked={densityPreset === 'compact'}
+                    onChange={(e) => setDensityPreset(e.target.value as DensityPreset)}
+                  />
+                  <span>Compact</span>
+                  <span className="density-hint">Tighter spacing</span>
+                </label>
+                <label className={`density-option ${densityPreset === 'ultra-compact' ? 'active' : ''}`}>
+                  <input
+                    type="radio"
+                    name="densityPreset"
+                    value="ultra-compact"
+                    checked={densityPreset === 'ultra-compact'}
+                    onChange={(e) => setDensityPreset(e.target.value as DensityPreset)}
+                  />
+                  <span>Ultra-Compact</span>
+                  <span className="density-hint">Maximum density</span>
+                </label>
+              </div>
+            </div>
           </div>
         </aside>
 
         <aside className="sidebar-right">
           <div className="sidebar-sticky">
+            <div className="preview-actions">
+              <button
+                className="btn-primary btn-generate-pdf"
+                onClick={handleGeneratePDF}
+                disabled={!contact.fullName || !contact.email || !contact.phone || !contact.location || !summary.summary}
+              >
+                Generate PDF
+              </button>
+            </div>
+            
             <div className="preview-container">
               <div className="preview-header">
                 <h3>Preview</h3>
@@ -496,6 +598,34 @@ function App() {
               {isPreviewOutdated && previewState === 'ready' && (
                 <div className="preview-outdated-notice">
                   Preview may be outdated
+                </div>
+              )}
+
+              {previewState === 'ready' && previewPageCount !== null && (
+                <div className={`preview-page-status ${previewPageCount === 1 ? 'status-success' : 'status-warning'}`}>
+                  {previewPageCount === 1 ? (
+                    <>
+                      <span className="status-icon">✓</span>
+                      <span>Fits on 1 page — Ready for ATS systems</span>
+                    </>
+                  ) : (
+                    <>
+                      <div className="status-header">
+                        <span className="status-icon">⚠</span>
+                        <span>Resume spans {previewPageCount} pages</span>
+                      </div>
+                      <div className="status-guidance">
+                        <strong>How to fit on one page:</strong>
+                        <ul>
+                          <li><strong>Quick fix:</strong> Try "Compact" or "Ultra-Compact" density (left panel)</li>
+                          <li><strong>Content:</strong> Trim older experience bullets to 2-3 per role</li>
+                          <li><strong>Sections:</strong> Reduce projects list or combine short bullet points</li>
+                          <li><strong>Skills:</strong> List only most relevant skills (8-12 max)</li>
+                        </ul>
+                        <p className="status-tip">💡 Most recruiters prefer one-page resumes for roles with &lt;10 years experience</p>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
 

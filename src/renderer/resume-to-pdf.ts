@@ -19,14 +19,18 @@ import { renderDocumentToPDF } from './pdf-renderer';
  * Use validateResume() before calling this function.
  * 
  * @param resume - Validated Resume object
+ * @param fontProfile - Font profile to use ('sans', 'serif', or 'mono')
  * @returns Promise that resolves to PDF buffer
  */
-export async function generatePDFFromResume(resume: Resume): Promise<Buffer> {
+export async function generatePDFFromResume(
+  resume: Resume,
+  fontProfile: 'sans' | 'serif' | 'mono' = 'sans'
+): Promise<Buffer> {
   // Transform to document model
   const document = transformResumeToDocument(resume);
   
   // Render to PDF
-  return renderDocumentToPDF(document);
+  return renderDocumentToPDF(document, fontProfile);
 }
 
 /**
@@ -35,8 +39,12 @@ export async function generatePDFFromResume(resume: Resume): Promise<Buffer> {
  * Assumes the Document has been created from validated data.
  * 
  * @param document - Document model to render
+ * @param fontProfile - Font profile to use ('sans', 'serif', or 'mono')
  * @returns Promise that resolves to PDF buffer
  */
-export async function generatePDFFromDocument(document: Document): Promise<Buffer> {
-  return renderDocumentToPDF(document);
+export async function generatePDFFromDocument(
+  document: Document,
+  fontProfile: 'sans' | 'serif' | 'mono' = 'sans'
+): Promise<Buffer> {
+  return renderDocumentToPDF(document, fontProfile);
 }

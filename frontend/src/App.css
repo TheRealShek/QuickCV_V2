@@ -154,6 +154,144 @@ header h1 {
   top: 2rem;
 }
 
+/* Font Selector */
+.font-selector {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-top: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.font-selector h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.font-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.font-option {
+  display: flex;
+  flex-direction: column;
+  padding: 0.875rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.font-option:hover {
+  border-color: #1976d2;
+  background-color: #f8f9fa;
+}
+
+.font-option.active {
+  border-color: #1976d2;
+  background-color: #e3f2fd;
+}
+
+.font-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.font-option span:first-of-type {
+  font-weight: 600;
+  color: #333;
+  font-size: 0.95rem;
+  margin-bottom: 0.25rem;
+}
+
+.font-example {
+  font-size: 0.8rem;
+  color: #666;
+  font-style: italic;
+}
+
+/* Density Selector */
+.density-selector {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-top: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.density-selector h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.density-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.density-option {
+  display: flex;
+  flex-direction: column;
+  padding: 0.875rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.density-option:hover {
+  border-color: #1976d2;
+  background-color: #f8f9fa;
+}
+
+.density-option.active {
+  border-color: #1976d2;
+  background-color: #e3f2fd;
+}
+
+.density-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.density-option span:first-of-type {
+  font-weight: 600;
+  color: #333;
+  font-size: 0.95rem;
+  margin-bottom: 0.25rem;
+}
+
+.density-hint {
+  font-size: 0.8rem;
+  color: #666;
+  font-style: italic;
+}
+
+/* Preview Actions */
+.preview-actions {
+  margin-bottom: 1rem;
+}
+
+.btn-generate-pdf {
+  width: 100%;
+  padding: 0.875rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
 /* Preview Container */
 .preview-container {
   background: white;
@@ -211,6 +349,89 @@ header h1 {
   text-align: center;
   font-size: 0.8rem;
   color: #856404;
+}
+
+.preview-page-status {
+  padding: 0.625rem 1rem;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.preview-page-status.status-success {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border-bottom-color: #c8e6c9;
+}
+
+.preview-page-status.status-warning {
+  background: #fff3e0;
+  color: #e65100;
+  border-bottom-color: #ffe0b2;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 1rem;
+}
+
+.status-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.status-guidance {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: #d84315;
+  width: 100%;
+}
+
+.status-guidance strong {
+  color: #bf360c;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.status-guidance ul {
+  margin: 0.5rem 0 0.75rem 1.25rem;
+  padding: 0;
+  list-style: disc;
+}
+
+.status-guidance li {
+  margin-bottom: 0.375rem;
+}
+
+.status-guidance li strong {
+  display: inline;
+  font-size: 0.8125rem;
+}
+
+.status-tip {
+  margin: 0.5rem 0 0 0;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.6);
+  border-left: 3px solid #ff9800;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
+.status-icon {
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.status-hint {
+  flex-basis: 100%;
+  font-size: 0.75rem;
+  opacity: 0.9;
+  font-style: italic;
+  margin-top: 0.25rem;
 }
 
 .preview-content {
@@ -404,16 +625,6 @@ header h1 {
   margin-top: 0.25rem;
   font-size: 0.875rem;
   color: #666;
-}
-
-.actions {
-  margin-top: 2rem;
-  padding-top: 2rem;
-  border-top: 1px solid #e0e0e0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
 }
 
 .warning-text {

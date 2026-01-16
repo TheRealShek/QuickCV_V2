@@ -55,3 +55,7 @@ export interface Resume {
 }
 
 export type SectionKey = 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'projects';
+
+export type FontProfile = 'sans' | 'serif' | 'mono';
+
+export type DensityPreset = 'normal' | 'compact' | 'ultra-compact';

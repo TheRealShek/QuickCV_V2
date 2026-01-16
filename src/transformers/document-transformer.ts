@@ -74,27 +74,27 @@ function transformContact(resume: Resume): DocumentElement[] {
   const elements: DocumentElement[] = [];
   const { contact } = resume;
   
-  // Full name as main heading
+  // Full name as main heading (will be rendered bold)
   elements.push(createHeading(contact.fullName, 1));
   
-  // Contact details as text lines
-  elements.push(createTextLine(contact.email));
-  elements.push(createTextLine(contact.phone));
-  elements.push(createTextLine(contact.location));
+  // Contact details on single line with bullet separators
+  // Order: email → phone → location → professional links
+  const contactParts: string[] = [];
   
-  // Optional links
-  if (contact.linkedin) {
-    elements.push(createTextLine(contact.linkedin));
-  }
-  if (contact.github) {
-    elements.push(createTextLine(contact.github));
-  }
-  if (contact.portfolio) {
-    elements.push(createTextLine(contact.portfolio));
-  }
-  if (contact.twitter) {
-    elements.push(createTextLine(contact.twitter));
-  }
+  // Core contact info: email → phone → location
+  if (contact.email) contactParts.push(contact.email);
+  if (contact.phone) contactParts.push(contact.phone);
+  if (contact.location) contactParts.push(contact.location);
+  
+  // Professional links after core info
+  if (contact.linkedin) contactParts.push(contact.linkedin);
+  if (contact.github) contactParts.push(contact.github);
+  if (contact.portfolio) contactParts.push(contact.portfolio);
+  if (contact.twitter) contactParts.push(contact.twitter);
+  
+  // Join with bullet separator for visual polish
+  const contactLine = contactParts.filter(Boolean).join(' • ');
+  elements.push(createTextLine(contactLine));
   
   return elements;
 }
@@ -105,7 +105,7 @@ function transformContact(resume: Resume): DocumentElement[] {
 function transformSummary(resume: Resume): DocumentElement[] {
   const elements: DocumentElement[] = [];
   
-  elements.push(createHeading('Professional Summary', 2));
+  elements.push(createHeading('PROFESSIONAL SUMMARY', 2));
   elements.push(createParagraph(resume.summary.summary));
   
   return elements;
@@ -121,7 +121,7 @@ function transformExperience(resume: Resume): DocumentElement[] {
     return elements;
   }
   
-  elements.push(createHeading('Work Experience', 2));
+  elements.push(createHeading('WORK EXPERIENCE', 2));
   
   resume.experience.forEach((exp: WorkExperience, index: number) => {
     // Role as subheading
@@ -163,7 +163,7 @@ function transformEducation(resume: Resume): DocumentElement[] {
     return elements;
   }
   
-  elements.push(createHeading('Education', 2));
+  elements.push(createHeading('EDUCATION', 2));
   
   resume.education.forEach((edu: Education, index: number) => {
     // Degree as subheading
@@ -200,7 +200,7 @@ function transformSkills(resume: Resume): DocumentElement[] {
     return elements;
   }
   
-  elements.push(createHeading('Skills', 2));
+  elements.push(createHeading('SKILLS', 2));
   
   // Skills as comma-separated text line (ATS-friendly)
   const skillsText = resume.skills.skills.join(', ');
@@ -219,7 +219,7 @@ function transformProjects(resume: Resume): DocumentElement[] {
     return elements;
   }
   
-  elements.push(createHeading('Projects', 2));
+  elements.push(createHeading('PROJECTS', 2));
   
   resume.projects.forEach((project: Project, index: number) => {
     // Project name as subheading

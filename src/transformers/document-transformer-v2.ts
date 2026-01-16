@@ -86,15 +86,22 @@ function transformContactSection(resume: Resume): DocumentElement[] {
   const elements: DocumentElement[] = [];
   const { contact } = resume;
   
+  // Name as H1 heading
   elements.push({ type: 'HEADING', level: 1, text: contact.fullName });
-  elements.push({ type: 'TEXT_LINE', text: contact.email });
-  elements.push({ type: 'TEXT_LINE', text: contact.phone });
-  elements.push({ type: 'TEXT_LINE', text: contact.location });
   
-  if (contact.linkedin) elements.push({ type: 'TEXT_LINE', text: contact.linkedin });
-  if (contact.github) elements.push({ type: 'TEXT_LINE', text: contact.github });
-  if (contact.portfolio) elements.push({ type: 'TEXT_LINE', text: contact.portfolio });
-  if (contact.twitter) elements.push({ type: 'TEXT_LINE', text: contact.twitter });
+  // Single contact line: email → phone → location → links
+  const contactParts: string[] = [];
+  
+  if (contact.email) contactParts.push(contact.email);
+  if (contact.phone) contactParts.push(contact.phone);
+  if (contact.location) contactParts.push(contact.location);
+  if (contact.linkedin) contactParts.push(contact.linkedin);
+  if (contact.github) contactParts.push(contact.github);
+  if (contact.portfolio) contactParts.push(contact.portfolio);
+  if (contact.twitter) contactParts.push(contact.twitter);
+  
+  const contactLine = contactParts.filter(Boolean).join(' • ');
+  elements.push({ type: 'TEXT_LINE', text: contactLine });
   
   return elements;
 }

@@ -16,6 +16,12 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
+    /* Path mapping */
+    "baseUrl": ".",
+    "paths": {
+      "@backend/*": ["../dist/*"]
+    },
+
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,

@@ -6,6 +6,12 @@
  */
 
 /**
+ * Font Profile for ATS-safe typography
+ * Uses only PDF standard fonts to ensure compatibility
+ */
+export type FontProfile = 'sans' | 'serif' | 'mono';
+
+/**
  * Contact Information
  */
 export interface ContactInfo {

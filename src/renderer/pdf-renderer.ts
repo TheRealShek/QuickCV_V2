@@ -17,12 +17,11 @@ import type {
 import {
   PAGE_CONFIG,
   CONTENT_WIDTH,
-  FONTS,
-  FONT_SIZES,
-  SPACING,
   BULLET_MARKER,
   calculateLineHeight,
-  getElementSpacing,
+  getFontsForProfile,
+  getConfigForDensity,
+  type DensityPreset,
 } from './renderer-config';
 
 /**
@@ -31,6 +30,10 @@ import {
 interface RendererState {
   doc: PDFKit.PDFDocument;
   currentY: number;
+  fonts: { main: string; bold: string };
+  config: ReturnType<typeof getConfigForDensity>;
+  elementIndex: number;
+  isFirstTextLine: boolean;
 }
 
 /**
@@ -66,10 +69,10 @@ function checkPageBreak(state: RendererState, requiredSpace: number): void {
  */
 function renderHeading(state: RendererState, element: HeadingElement): void {
   const fontSize = element.level === 1 
-    ? FONT_SIZES.h1 
+    ? state.config.fontSizes.h1 
     : element.level === 2 
-      ? FONT_SIZES.h2 
-      : FONT_SIZES.h3;
+      ? state.config.fontSizes.h2 
+      : state.config.fontSizes.h3;
   
   const lineHeight = calculateLineHeight(fontSize);
   
@@ -78,7 +81,7 @@ function renderHeading(state: RendererState, element: HeadingElement): void {
   
   // Render heading text
   state.doc
-    .font(FONTS.bold)
+    .font(state.fonts.bold)
     .fontSize(fontSize)
     .text(element.text, PAGE_CONFIG.marginLeft, state.currentY, {
       width: CONTENT_WIDTH,
@@ -87,26 +90,27 @@ function renderHeading(state: RendererState, element: HeadingElement): void {
   
   // Reset font state to prevent leaking
   state.doc
-    .font(FONTS.main)
-    .fontSize(FONT_SIZES.body);
+    .font(state.fonts.main)
+    .fontSize(state.config.fontSizes.body);
   
-  // Update Y position
-  state.currentY += lineHeight + getElementSpacing('HEADING', 'after');
+  // Update Y position - use tighter spacing for H1 (name) to bring contact line closer
+  const spacingAfter = element.level === 1 ? state.config.spacing.afterNameHeading : state.config.spacing.afterHeading;
+  state.currentY += lineHeight + spacingAfter;
 }
 
 /**
  * Render a paragraph element
  */
 function renderParagraph(state: RendererState, element: ParagraphElement): void {
-  const fontSize = FONT_SIZES.body;
+  const fontSize = state.config.fontSizes.body;
   const lineHeight = calculateLineHeight(fontSize);
   
   // Check minimum space to start paragraph (prevent orphaned first lines)
-  checkPageBreak(state, SPACING.minSpaceForParagraph);
+  checkPageBreak(state, state.config.spacing.minSpaceForParagraph);
   
   // Ensure font state is correct
   state.doc
-    .font(FONTS.main)
+    .font(state.fonts.main)
     .fontSize(fontSize);
   
   // Render paragraph text
@@ -117,55 +121,62 @@ function renderParagraph(state: RendererState, element: ParagraphElement): void 
   });
   
   // Update Y position (PDFKit advances position automatically)
-  state.currentY = state.doc.y + getElementSpacing('PARAGRAPH', 'after');
+  state.currentY = state.doc.y + state.config.spacing.afterParagraph;
 }
 
 /**
  * Render a text line element
  */
 function renderTextLine(state: RendererState, element: TextLineElement): void {
-  const fontSize = FONT_SIZES.body;
+  // Detect if this is the contact info line (first TEXT_LINE in document, after name)
+  const isContactLine = state.isFirstTextLine;
+  if (isContactLine) {
+    state.isFirstTextLine = false;
+  }
+  
+  const fontSize = isContactLine ? state.config.fontSizes.contactInfo : state.config.fontSizes.body;
   const lineHeight = calculateLineHeight(fontSize);
   
   checkPageBreak(state, lineHeight);
   
   // Render text line
   state.doc
-    .font(FONTS.main)
+    .font(state.fonts.main)
     .fontSize(fontSize)
     .text(element.text, PAGE_CONFIG.marginLeft, state.currentY, {
       width: CONTENT_WIDTH,
       align: 'left',
     });
   
-  // Update Y position
-  state.currentY += lineHeight + getElementSpacing('TEXT_LINE', 'after');
+  // Update Y position with special spacing for contact line
+  const spacingAfter = isContactLine ? state.config.spacing.afterContactLine : state.config.spacing.afterTextLine;
+  state.currentY += lineHeight + spacingAfter;
 }
 
 /**
  * Render a list element (bullet points)
  */
 function renderList(state: RendererState, element: ListElement): void {
-  const fontSize = FONT_SIZES.body;
+  const fontSize = state.config.fontSizes.body;
   const lineHeight = calculateLineHeight(fontSize);
   
   element.items.forEach((item, index) => {
     // Check minimum space to start list item (prevent orphaned bullets)
-    checkPageBreak(state, SPACING.minSpaceForListItem);
+    checkPageBreak(state, state.config.spacing.minSpaceForListItem);
     
     // Calculate positions from config
     const bulletX = PAGE_CONFIG.marginLeft;
-    const textX = bulletX + SPACING.listItemIndent;
-    const textWidth = CONTENT_WIDTH - SPACING.listItemIndent;
+    const textX = bulletX + state.config.spacing.listItemIndent;
+    const textWidth = CONTENT_WIDTH - state.config.spacing.listItemIndent;
     
     // Ensure font state is correct
     state.doc
-      .font(FONTS.main)
+      .font(state.fonts.main)
       .fontSize(fontSize);
     
     // Render bullet marker
     state.doc.text(BULLET_MARKER, bulletX, state.currentY, {
-      width: SPACING.listItemIndent,
+      width: state.config.spacing.listItemIndent,
       align: 'left',
       continued: false,
     });
@@ -182,19 +193,19 @@ function renderList(state: RendererState, element: ListElement): void {
     
     // Add spacing between list items (except after last)
     if (index < element.items.length - 1) {
-      state.currentY += SPACING.betweenListItems;
+      state.currentY += state.config.spacing.betweenListItems;
     }
   });
   
   // Add spacing after list
-  state.currentY += getElementSpacing('LIST', 'after');
+  state.currentY += state.config.spacing.afterList;
 }
 
 /**
  * Render a section break
  */
 function renderSectionBreak(state: RendererState): void {
-  state.currentY += getElementSpacing('SECTION_BREAK', 'after');
+  state.currentY += state.config.spacing.sectionBreak;
 }
 
 /**
@@ -247,18 +258,47 @@ function verifyElementOrderPreservation(document: Document): void {
  * Assumes document has already been validated.
  * 
  * @param document - Document model to render
+ * @param fontProfile - Font profile to use ('sans', 'serif', or 'mono')
+ * @param densityPreset - Density preset for spacing and font sizes
  * @returns Promise that resolves to PDF buffer
  */
-export async function renderDocumentToPDF(document: Document): Promise<Buffer> {
+export async function renderDocumentToPDF(
+  document: Document,
+  fontProfile: 'sans' | 'serif' | 'mono' = 'sans',
+  densityPreset: DensityPreset = 'normal'
+): Promise<Buffer> {
+  const result = await renderDocumentToPDFWithMetadata(document, fontProfile, densityPreset);
+  return result.buffer;
+}
+
+/**
+ * Render complete document to PDF with metadata
+ * 
+ * @param document - Document model to render
+ * @param fontProfile - Font profile to use ('sans', 'serif', or 'mono')
+ * @param densityPreset - Density preset for spacing and font sizes
+ * @returns Promise that resolves to PDF buffer and page count
+ */
+export async function renderDocumentToPDFWithMetadata(
+  document: Document,
+  fontProfile: 'sans' | 'serif' | 'mono' = 'sans',
+  densityPreset: DensityPreset = 'normal'
+): Promise<{ buffer: Buffer; pageCount: number }> {
   return new Promise((resolve, reject) => {
     try {
       // ATS sanity check: verify element order will be preserved
       verifyElementOrderPreservation(document);
       
+      const fonts = getFontsForProfile(fontProfile);
+      const config = getConfigForDensity(densityPreset);
       const doc = initializePDF();
       const state: RendererState = {
         doc,
         currentY: PAGE_CONFIG.marginTop,
+        fonts,
+        config,
+        elementIndex: 0,
+        isFirstTextLine: true,
       };
       
       // Collect PDF data in chunks
@@ -270,7 +310,9 @@ export async function renderDocumentToPDF(document: Document): Promise<Buffer> {
       
       doc.on('end', () => {
         const pdfBuffer = Buffer.concat(chunks);
-        resolve(pdfBuffer);
+        // PDFKit tracks page count internally
+        const pageCount = (doc as any).bufferedPageRange().count;
+        resolve({ buffer: pdfBuffer, pageCount });
       });
       
       doc.on('error', (error: Error) => {

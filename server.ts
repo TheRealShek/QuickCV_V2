@@ -7,7 +7,7 @@
 
 import { validateResume } from './dist/validators/resume-validator.js';
 import { transformResumeToDocumentWithOrder } from './dist/transformers/document-transformer-v2.js';
-import { renderDocumentToPDF } from './dist/renderer/pdf-renderer.js';
+import { renderDocumentToPDFWithMetadata } from './dist/renderer/pdf-renderer.js';
 import type { Resume } from './dist/types/resume.types.js';
 import type { ValidationError } from './dist/types/validation.types.js';
 
@@ -20,6 +20,8 @@ const MAX_REQUEST_SIZE = 1024 * 1024; // 1MB
 interface GeneratePDFRequest {
   resume: unknown;
   sectionOrder?: string[];
+  fontProfile?: 'sans' | 'serif' | 'mono';
+  densityPreset?: 'normal' | 'compact' | 'ultra-compact';
 }
 
 /**
@@ -56,11 +58,27 @@ async function handleGeneratePDF(request: Request): Promise<Response> {
       );
     }
     
-    const { resume, sectionOrder } = body;
+    const { resume, sectionOrder, fontProfile, densityPreset } = body;
     
     if (!resume) {
       return new Response(
         JSON.stringify({ error: 'Missing required field: resume' }),
+        { status: 400, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS } }
+      );
+    }
+    
+    // Validate fontProfile if provided
+    if (fontProfile && !['sans', 'serif', 'mono'].includes(fontProfile)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid fontProfile. Must be: sans, serif, or mono' }),
+        { status: 400, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS } }
+      );
+    }
+    
+    // Validate densityPreset if provided
+    if (densityPreset && !['normal', 'compact', 'ultra-compact'].includes(densityPreset)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid densityPreset. Must be: normal, compact, or ultra-compact' }),
         { status: 400, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS } }
       );
     }
@@ -85,16 +103,21 @@ async function handleGeneratePDF(request: Request): Promise<Response> {
     // Step 2: Transform with section ordering (v2 feature)
     const document = transformResumeToDocumentWithOrder(resume as Resume, sectionOrder);
     
-    // Step 3: Render to PDF (v1 renderer, unchanged)
-    const pdfBuffer = await renderDocumentToPDF(document);
+    // Step 3: Render to PDF with font profile, density preset, and get metadata
+    const { buffer: pdfBuffer, pageCount } = await renderDocumentToPDFWithMetadata(
+      document,
+      fontProfile || 'sans',
+      densityPreset || 'normal'
+    );
     
-    // Step 4: Return PDF (convert Buffer to Uint8Array for Response)
+    // Step 4: Return PDF with page count header
     return new Response(new Uint8Array(pdfBuffer), {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': 'attachment; filename="resume.pdf"',
         'Content-Length': pdfBuffer.length.toString(),
+        'X-PDF-Page-Count': pageCount.toString(),
         ...CORS_HEADERS,
       },
     });
