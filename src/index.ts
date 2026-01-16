@@ -1,9 +1,10 @@
 /**
- * Validation Module
+ * QuickCV - ATS-Friendly Resume Builder
  * 
- * Public exports for resume validation
+ * Public API exports
  */
 
+// Validation
 export { validateResume, isValidResume } from './validators/resume-validator';
 export {
   validateContactInfo,
@@ -17,6 +18,21 @@ export {
 export { sanitizeString, sanitizeStringArray, isSafeString } from './utils/sanitization';
 export { isStructureSafe, getObjectDepth } from './utils/depth-check';
 
+// Document Transformation
+export {
+  transformResumeToDocument,
+  transformResumeToDocumentWithMetadata,
+} from './transformers/document-transformer';
+
+// PDF Rendering
+export {
+  generatePDFFromResume,
+  generatePDFFromDocument,
+} from './renderer/resume-to-pdf';
+
+export { renderDocumentToPDF } from './renderer/pdf-renderer';
+
+// Types - Resume Schema
 export type {
   Resume,
   ContactInfo,
@@ -27,6 +43,7 @@ export type {
   Project,
 } from './types/resume.types';
 
+// Types - Validation
 export type {
   ValidationLimits,
   ValidationError,
@@ -35,3 +52,19 @@ export type {
 } from './types/validation.types';
 
 export { DEFAULT_VALIDATION_LIMITS } from './types/validation.types';
+
+// Types - Document Model
+export type {
+  Document,
+  DocumentElement,
+  DocumentElementType,
+  DocumentWithMetadata,
+  DocumentMetadata,
+  HeadingElement,
+  HeadingLevel,
+  ParagraphElement,
+  TextLineElement,
+  ListElement,
+  ListItem,
+  SectionBreakElement,
+} from './types/document.types';

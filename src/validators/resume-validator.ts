@@ -26,7 +26,7 @@ import {
  */
 function getJsonSize(data: unknown): number {
   try {
-    return new TextEncoder().encode(JSON.stringify(data)).length;
+    return Buffer.byteLength(JSON.stringify(data), 'utf8');
   } catch {
     return 0;
   }

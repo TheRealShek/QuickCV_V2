@@ -1,0 +1,33 @@
+{
+  "name": "quickcv-v2",
+  "version": "1.0.0",
+  "description": "ATS-friendly resume builder with text-based PDF generation",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": [
+    "resume",
+    "cv",
+    "pdf",
+    "ats",
+    "resume-builder"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "pdfkit": "^0.15.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.5",
+    "@types/pdfkit": "^0.13.4",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
