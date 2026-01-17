@@ -1,0 +1,2 @@
+# Don't ignore dist - we need it for API functions
+!dist/
