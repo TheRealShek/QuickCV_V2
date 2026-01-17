@@ -1,12 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { CircleEllipsis } from 'lucide-react';
+import { CircleEllipsis, User, FileText, Briefcase, GraduationCap, Wrench, FolderKanban, ChevronDown, X, ChevronUp, Check, Pencil } from 'lucide-react';
 import { ContactForm } from './components/ContactForm';
 import { SummaryForm } from './components/SummaryForm';
 import { ExperienceForm } from './components/ExperienceForm';
 import { EducationForm } from './components/EducationForm';
 import { SkillsForm } from './components/SkillsForm';
 import { ProjectsForm } from './components/ProjectsForm';
-import { SectionReorder } from './components/SectionReorder';
 import { validateResume } from '@backend/validators/resume-validator';
 import type { Resume, ContactInfo, ProfessionalSummary, WorkExperience, Education, Skills, Project, SectionKey, FontProfile, DensityPreset } from './types';
 import './App.css';
@@ -82,7 +81,9 @@ function App() {
   );
 
   const [activeSection, setActiveSection] = useState<SectionKey>('contact');
-  const [expandedAppearanceSection, setExpandedAppearanceSection] = useState<'font' | 'density' | null>(null);
+  const [expandedAccordion, setExpandedAccordion] = useState<SectionKey | null>('contact');
+  const [isAppearanceOpen, setIsAppearanceOpen] = useState(false);
+  const [appearanceTab, setAppearanceTab] = useState<'font' | 'density'>('font');
 
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving'>('idle');
   const [lastSaveTime, setLastSaveTime] = useState<number | null>(null);
@@ -110,6 +111,31 @@ function App() {
   useEffect(() => { sectionOrderRef.current = sectionOrder; }, [sectionOrder]);
   useEffect(() => { fontProfileRef.current = fontProfile; }, [fontProfile]);
   useEffect(() => { densityPresetRef.current = densityPreset; }, [densityPreset]);
+
+  // Handle appearance panel close on outside click or Escape key
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.appearance-btn') && !target.closest('.appearance-panel')) {
+        setIsAppearanceOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsAppearanceOpen(false);
+      }
+    };
+
+    if (isAppearanceOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleEscape);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener('keydown', handleEscape);
+      };
+    }
+  }, [isAppearanceOpen]);
 
   // Calculate relative time message
   const getRelativeTimeMessage = (): string => {
@@ -142,17 +168,11 @@ function App() {
   const [previewState, setPreviewState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewError, setPreviewError] = useState<string | null>(null);
-  const [isPreviewOutdated, setIsPreviewOutdated] = useState(false);
   const [previewPageCount, setPreviewPageCount] = useState<number | null>(null);
-  const lastPreviewDataRef = useRef<string>('');
 
   // Mark as changed whenever state updates
   useEffect(() => {
     hasChangesRef.current = true;
-    // Mark preview as outdated if data changes after preview was generated
-    if (previewState === 'ready') {
-      setIsPreviewOutdated(true);
-    }
   }, [contact, summary, experience, education, skills, projects, sectionOrder, fontProfile, previewState]);
 
   // Update relative time message every second (stop after 1 minute)
@@ -227,6 +247,71 @@ function App() {
 
     return () => clearInterval(intervalId);
   }, []); // Empty deps - runs once on mount
+
+  // Live preview: regenerate on every state change
+  useEffect(() => {
+    const generateLivePreview = async () => {
+      // Build resume JSON
+      const resume: Resume = {
+        contact,
+        summary,
+        experience,
+        education,
+        skills,
+        projects,
+      };
+
+      const requestData = {
+        resume,
+        sectionOrder,
+        fontProfile,
+        densityPreset,
+      };
+
+      setPreviewState('loading');
+      setPreviewError(null);
+
+      try {
+        const response = await fetch('http://localhost:3000/generate-pdf', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestData),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          console.error('Preview generation failed:', error);
+          setPreviewError(error.error || 'Failed to generate preview');
+          setPreviewState('error');
+          return;
+        }
+
+        // Revoke old preview URL to free memory
+        if (previewUrl) {
+          window.URL.revokeObjectURL(previewUrl);
+        }
+
+        // Extract page count from response header
+        const pageCountHeader = response.headers.get('X-PDF-Page-Count');
+        const pageCount = pageCountHeader ? parseInt(pageCountHeader, 10) : null;
+
+        // Create new preview
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        setPreviewUrl(url);
+        setPreviewPageCount(pageCount);
+        setPreviewState('ready');
+      } catch (error) {
+        console.error('Preview error:', error);
+        setPreviewError('Failed to connect to backend. Make sure the server is running.');
+        setPreviewState('error');
+      }
+    };
+
+    generateLivePreview();
+  }, [contact, summary, experience, education, skills, projects, sectionOrder, fontProfile, densityPreset]);
 
   const handleGeneratePDF = async () => {
     // Build resume JSON (matching v1 schema)
@@ -312,70 +397,6 @@ function App() {
     document.body.removeChild(a);
   };
 
-  const handleRefreshPreview = async () => {
-    // Build resume JSON
-    const resume: Resume = {
-      contact,
-      summary,
-      experience,
-      education,
-      skills,
-      projects,
-    };
-
-    const requestData = {
-      resume,
-      sectionOrder,
-      fontProfile,
-      densityPreset,
-    };
-
-    const currentDataString = JSON.stringify(requestData);
-
-    setPreviewState('loading');
-    setPreviewError(null);
-
-    try {
-      const response = await fetch('http://localhost:3000/generate-pdf', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: currentDataString,
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        console.error('Preview generation failed:', error);
-        setPreviewError(error.error || 'Failed to generate preview');
-        setPreviewState('error');
-        return;
-      }
-
-      // Revoke old preview URL to free memory
-      if (previewUrl) {
-        window.URL.revokeObjectURL(previewUrl);
-      }
-
-      // Extract page count from response header
-      const pageCountHeader = response.headers.get('X-PDF-Page-Count');
-      const pageCount = pageCountHeader ? parseInt(pageCountHeader, 10) : null;
-
-      // Create new preview
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      setPreviewUrl(url);
-      setPreviewPageCount(pageCount);
-      lastPreviewDataRef.current = currentDataString;
-      setIsPreviewOutdated(false);
-      setPreviewState('ready');
-    } catch (error) {
-      console.error('Preview error:', error);
-      setPreviewError('Failed to connect to backend. Make sure the server is running.');
-      setPreviewState('error');
-    }
-  };
-
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -438,6 +459,75 @@ function App() {
     }
   };
 
+  // Section reordering functions
+  const moveSectionUp = (section: SectionKey) => {
+    const currentIndex = sectionOrder.indexOf(section);
+    if (currentIndex <= 1) return; // Can't move contact (0) or move above contact
+    const newOrder = [...sectionOrder];
+    [newOrder[currentIndex - 1], newOrder[currentIndex]] = [newOrder[currentIndex], newOrder[currentIndex - 1]];
+    setSectionOrder(newOrder);
+  };
+
+  const moveSectionDown = (section: SectionKey) => {
+    const currentIndex = sectionOrder.indexOf(section);
+    if (currentIndex === 0 || currentIndex >= sectionOrder.length - 1) return; // Can't move contact or last item
+    const newOrder = [...sectionOrder];
+    [newOrder[currentIndex], newOrder[currentIndex + 1]] = [newOrder[currentIndex + 1], newOrder[currentIndex]];
+    setSectionOrder(newOrder);
+  };
+
+  const canMoveUp = (section: SectionKey): boolean => {
+    const index = sectionOrder.indexOf(section);
+    return index > 1; // Can move if not contact and not second position
+  };
+
+  const canMoveDown = (section: SectionKey): boolean => {
+    const index = sectionOrder.indexOf(section);
+    return index > 0 && index < sectionOrder.length - 1; // Can move if not contact and not last
+  };
+
+  // Check if a section is completed
+  const isSectionComplete = (section: SectionKey): boolean => {
+    switch (section) {
+      case 'contact':
+        return !!(contact.fullName && contact.email && contact.phone && contact.location);
+      case 'summary':
+        return !!summary.summary && summary.summary.trim().length > 0;
+      case 'experience':
+        return experience.length > 0;
+      case 'education':
+        return education.length > 0;
+      case 'skills':
+        return skills.skills.length > 0;
+      case 'projects':
+        return projects.length > 0;
+      default:
+        return false;
+    }
+  };
+
+  const getSectionIcon = (section: SectionKey) => {
+    switch (section) {
+      case 'contact': return User;
+      case 'summary': return FileText;
+      case 'experience': return Briefcase;
+      case 'education': return GraduationCap;
+      case 'skills': return Wrench;
+      case 'projects': return FolderKanban;
+    }
+  };
+
+  const getSectionLabel = (section: SectionKey): string => {
+    switch (section) {
+      case 'contact': return 'Contact';
+      case 'summary': return 'Summary';
+      case 'experience': return 'Experience';
+      case 'education': return 'Education';
+      case 'skills': return 'Skills';
+      case 'projects': return 'Projects';
+    }
+  };
+
   return (
     <div className="app">
       <div className="top-toolbar">
@@ -475,201 +565,209 @@ function App() {
         />
       </div>
 
-      <header>
-        <h1>QuickCV - Resume Builder</h1>
-        <p className="subtitle">ATS-friendly resume generator</p>
-      </header>
-
       <div className="main-grid">
-        <main className="form-container">
-          {/* Section Navigation */}
-          <div className="section-tabs-wrapper">
-            <div className="section-tabs">
-              <button 
-                className={`section-tab ${activeSection === 'contact' ? 'active' : ''}`}
-                onClick={() => setActiveSection('contact')}
+        {/* Progress Indicator */}
+        <div className="progress-indicator">
+          <div className="progress-steps">
+            {sectionOrder.map((section, index) => {
+              const Icon = getSectionIcon(section);
+              const isComplete = isSectionComplete(section);
+              const isLast = index === sectionOrder.length - 1;
+              
+              return (
+                <div key={section} className="progress-step-wrapper">
+                  <div 
+                    className={`progress-step ${isComplete ? 'complete' : 'incomplete'} ${expandedAccordion === section ? 'active' : ''}`}
+                    title={getSectionLabel(section)}
+                    onClick={() => setExpandedAccordion(section)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setExpandedAccordion(section);
+                      }
+                    }}
+                    aria-label={`Open ${getSectionLabel(section)} section`}
+                  >
+                    <div className="progress-step-icon">
+                      <Icon size={16} />
+                    </div>
+                    <div className="progress-step-label">
+                      {getSectionLabel(section)}
+                    </div>
+                    <div className="progress-step-status">
+                      {isComplete ? (
+                        <Check size={14} className="status-check" />
+                      ) : (
+                        <X size={14} className="status-x" />
+                      )}
+                    </div>
+                  </div>
+                  {!isLast && <div className="progress-connector"></div>}
+                </div>
+              );
+            })}
+
+            {/* Appearance Button - part of progress column */}
+            <div className="progress-step-wrapper" style={{ marginTop: '1.5rem' }}>
+              <button
+                className={`appearance-btn ${isAppearanceOpen ? 'active' : ''}`}
+                onClick={() => setIsAppearanceOpen(!isAppearanceOpen)}
+                title="Appearance"
+                aria-label="Appearance"
               >
-                Contact
-              </button>
-              <button 
-                className={`section-tab ${activeSection === 'summary' ? 'active' : ''}`}
-                onClick={() => setActiveSection('summary')}
-              >
-                Summary
-              </button>
-              <button 
-                className={`section-tab ${activeSection === 'experience' ? 'active' : ''}`}
-                onClick={() => setActiveSection('experience')}
-              >
-                Experience
-              </button>
-              <button 
-                className={`section-tab ${activeSection === 'education' ? 'active' : ''}`}
-                onClick={() => setActiveSection('education')}
-              >
-                Education
-              </button>
-              <button 
-                className={`section-tab ${activeSection === 'skills' ? 'active' : ''}`}
-                onClick={() => setActiveSection('skills')}
-              >
-                Skills
-              </button>
-              <button 
-                className={`section-tab ${activeSection === 'projects' ? 'active' : ''}`}
-                onClick={() => setActiveSection('projects')}
-              >
-                Projects
+                <Pencil size={20} />
               </button>
             </div>
           </div>
+        </div>
 
-          {/* Section Content */}
-          <div className="section-content">
-            {activeSection === 'contact' && <ContactForm data={contact} onChange={setContact} />}
-            {activeSection === 'summary' && <SummaryForm data={summary} onChange={setSummary} />}
-            {activeSection === 'experience' && <ExperienceForm data={experience} onChange={setExperience} />}
-            {activeSection === 'education' && <EducationForm data={education} onChange={setEducation} />}
-            {activeSection === 'skills' && <SkillsForm data={skills} onChange={setSkills} />}
-            {activeSection === 'projects' && <ProjectsForm data={projects} onChange={setProjects} />}
+        <main className="form-container">
+          {/* Accordion Sections */}
+          <div className="accordion-wrapper">
+            {sectionOrder.map((sectionKey) => {
+              const getSectionConfig = (key: SectionKey) => {
+                switch (key) {
+                  case 'contact':
+                    return {
+                      icon: User,
+                      title: 'Contact Information',
+                      content: <ContactForm data={contact} onChange={setContact} />,
+                      isEmpty: false,
+                      emptyMessage: ''
+                    };
+                  case 'summary':
+                    return {
+                      icon: FileText,
+                      title: 'Professional Summary',
+                      content: <SummaryForm data={summary} onChange={setSummary} />,
+                      isEmpty: false,
+                      emptyMessage: ''
+                    };
+                  case 'experience':
+                    return {
+                      icon: Briefcase,
+                      title: 'Work Experience',
+                      content: <ExperienceForm data={experience} onChange={setExperience} />,
+                      isEmpty: experience.length === 0,
+                      emptyMessage: 'No experience entries yet'
+                    };
+                  case 'education':
+                    return {
+                      icon: GraduationCap,
+                      title: 'Education',
+                      content: <EducationForm data={education} onChange={setEducation} />,
+                      isEmpty: education.length === 0,
+                      emptyMessage: 'No education entries yet'
+                    };
+                  case 'skills':
+                    return {
+                      icon: Wrench,
+                      title: 'Skills',
+                      content: <SkillsForm data={skills} onChange={setSkills} />,
+                      isEmpty: skills.skills.length === 0,
+                      emptyMessage: 'No skills added yet'
+                    };
+                  case 'projects':
+                    return {
+                      icon: FolderKanban,
+                      title: 'Projects',
+                      content: <ProjectsForm data={projects} onChange={setProjects} />,
+                      isEmpty: projects.length === 0,
+                      emptyMessage: 'No projects added yet'
+                    };
+                }
+              };
+
+              const config = getSectionConfig(sectionKey);
+              const Icon = config.icon;
+              const isExpanded = expandedAccordion === sectionKey;
+
+              return (
+                <div key={sectionKey} className="accordion-card">
+                  <div 
+                    className="accordion-header"
+                    onClick={() => setExpandedAccordion(isExpanded ? null : sectionKey)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setExpandedAccordion(isExpanded ? null : sectionKey);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    aria-expanded={isExpanded}
+                  >
+                    <div className="accordion-header-left">
+                      <Icon size={20} className="accordion-icon" />
+                      <h3>{config.title}</h3>
+                      {config.isEmpty && !isExpanded && (
+                        <span className="accordion-empty-badge">Empty</span>
+                      )}
+                    </div>
+                    <div className="accordion-header-right">
+                      <button
+                        className="accordion-reorder-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          moveSectionUp(sectionKey);
+                        }}
+                        disabled={!canMoveUp(sectionKey)}
+                        aria-label="Move section up"
+                        title="Move up"
+                      >
+                        <ChevronUp size={16} />
+                      </button>
+                      <button
+                        className="accordion-reorder-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          moveSectionDown(sectionKey);
+                        }}
+                        disabled={!canMoveDown(sectionKey)}
+                        aria-label="Move section down"
+                        title="Move down"
+                      >
+                        <ChevronDown size={16} />
+                      </button>
+                      <ChevronDown 
+                        size={24} 
+                        className={`accordion-chevron ${isExpanded ? 'expanded' : ''}`}
+                        aria-hidden="true"
+                      />
+                    </div>
+                  </div>
+                  {isExpanded && (
+                    <div className="accordion-content">
+                      {config.content}
+                    </div>
+                  )}
+                  {config.isEmpty && !isExpanded && (
+                    <div className="accordion-empty-hint">{config.emptyMessage}</div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          
+          <div className="form-footer-actions">
+            <button
+              className="btn-primary btn-generate-pdf"
+              onClick={handleGeneratePDF}
+              disabled={!contact.fullName || !contact.email || !contact.phone || !contact.location || !summary.summary}
+            >
+              Generate PDF
+            </button>
           </div>
         </main>
 
-        <aside className="sidebar-center">
-          <div className="sidebar-sticky">
-            <SectionReorder sectionOrder={sectionOrder} onChange={setSectionOrder} />
-            
-            <div className="appearance-panel">
-              <h2>Appearance</h2>
-              
-              <div className="appearance-section">
-                <h3 
-                  className={`appearance-section-header ${expandedAppearanceSection === 'font' ? 'expanded' : ''}`}
-                  onClick={() => setExpandedAppearanceSection(expandedAppearanceSection === 'font' ? null : 'font')}
-                >
-                  Font Style
-                  <span className="accordion-icon">{expandedAppearanceSection === 'font' ? '−' : '+'}</span>
-                </h3>
-                {expandedAppearanceSection === 'font' && (
-                  <div className="radio-group">
-                    <label className="radio-label">
-                      <input
-                        type="radio"
-                        name="fontProfile"
-                        value="sans"
-                        checked={fontProfile === 'sans'}
-                        onChange={(e) => setFontProfile(e.target.value as FontProfile)}
-                      />
-                      <span>Sans-Serif</span>
-                      <span className="help-text-inline">Modern & Clean</span>
-                    </label>
-                    <label className="radio-label">
-                      <input
-                        type="radio"
-                        name="fontProfile"
-                        value="serif"
-                        checked={fontProfile === 'serif'}
-                        onChange={(e) => setFontProfile(e.target.value as FontProfile)}
-                      />
-                      <span>Serif</span>
-                      <span className="help-text-inline">Traditional & Formal</span>
-                    </label>
-                    <label className="radio-label">
-                      <input
-                        type="radio"
-                        name="fontProfile"
-                        value="mono"
-                        checked={fontProfile === 'mono'}
-                        onChange={(e) => setFontProfile(e.target.value as FontProfile)}
-                      />
-                      <span>Monospace</span>
-                      <span className="help-text-inline">Tech & Precise</span>
-                    </label>
-                  </div>
-                )}
-              </div>
-
-              <div className="appearance-divider"></div>
-
-              <div className="appearance-section">
-                <h3 
-                  className={`appearance-section-header ${expandedAppearanceSection === 'density' ? 'expanded' : ''}`}
-                  onClick={() => setExpandedAppearanceSection(expandedAppearanceSection === 'density' ? null : 'density')}
-                >
-                  Layout Density
-                  <span className="accordion-icon">{expandedAppearanceSection === 'density' ? '−' : '+'}</span>
-                </h3>
-                {expandedAppearanceSection === 'density' && (
-                  <div className="radio-group">
-                    <label className="radio-label">
-                      <input
-                        type="radio"
-                        name="densityPreset"
-                        value="normal"
-                        checked={densityPreset === 'normal'}
-                        onChange={(e) => setDensityPreset(e.target.value as DensityPreset)}
-                      />
-                      <span>Normal</span>
-                      <span className="help-text-inline">Comfortable spacing</span>
-                    </label>
-                    <label className="radio-label">
-                      <input
-                        type="radio"
-                        name="densityPreset"
-                        value="compact"
-                        checked={densityPreset === 'compact'}
-                        onChange={(e) => setDensityPreset(e.target.value as DensityPreset)}
-                      />
-                      <span>Compact</span>
-                      <span className="help-text-inline">Tighter spacing</span>
-                    </label>
-                    <label className="radio-label">
-                      <input
-                        type="radio"
-                        name="densityPreset"
-                        value="ultra-compact"
-                        checked={densityPreset === 'ultra-compact'}
-                        onChange={(e) => setDensityPreset(e.target.value as DensityPreset)}
-                      />
-                      <span>Ultra-Compact</span>
-                      <span className="help-text-inline">Maximum density</span>
-                    </label>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </aside>
-
         <aside className="sidebar-right">
           <div className="sidebar-sticky">
-            <div className="preview-actions">
-              <button
-                className="btn-primary btn-generate-pdf"
-                onClick={handleGeneratePDF}
-                disabled={!contact.fullName || !contact.email || !contact.phone || !contact.location || !summary.summary}
-              >
-                Generate PDF
-              </button>
-            </div>
-            
             <div className="preview-container">
               <div className="preview-header">
                 <h3>Preview</h3>
-                <button
-                  className="btn-preview-refresh"
-                  onClick={handleRefreshPreview}
-                  disabled={previewState === 'loading'}
-                >
-                  {previewState === 'loading' ? 'Loading...' : 'Refresh Preview'}
-                </button>
               </div>
-
-              {isPreviewOutdated && previewState === 'ready' && (
-                <div className="preview-outdated-notice">
-                  Preview may be outdated
-                </div>
-              )}
 
               {previewState === 'ready' && previewPageCount !== null && (
                 <div className={`preview-page-status ${previewPageCount === 1 ? 'status-success' : 'status-warning'}`}>
@@ -700,17 +798,9 @@ function App() {
               )}
 
               <div className="preview-content">
-                {previewState === 'idle' && (
-                  <div className="preview-empty-state">
-                    <p>No preview yet</p>
-                    <p className="preview-hint">Click "Refresh Preview" to generate</p>
-                  </div>
-                )}
-
                 {previewState === 'loading' && (
-                  <div className="preview-loading-state">
-                    <div className="preview-spinner"></div>
-                    <p>Generating preview...</p>
+                  <div className="preview-generating-text">
+                    Generating preview…
                   </div>
                 )}
 
@@ -734,9 +824,115 @@ function App() {
         </aside>
       </div>
 
-      <footer>
-        <p>QuickCV v2 - Complete with section reordering</p>
-      </footer>
+      {/* Appearance Panel */}
+      {isAppearanceOpen && (
+        <div className="appearance-panel">
+          <div className="appearance-header">
+            <h3>Appearance</h3>
+            <button
+              className="appearance-close"
+              onClick={() => setIsAppearanceOpen(false)}
+              aria-label="Close"
+            >
+              <X size={16} />
+            </button>
+          </div>
+          
+          <div className="appearance-tabs">
+            <button
+              className={`appearance-tab ${appearanceTab === 'font' ? 'active' : ''}`}
+              onClick={() => setAppearanceTab('font')}
+            >
+              Font Style
+            </button>
+            <button
+              className={`appearance-tab ${appearanceTab === 'density' ? 'active' : ''}`}
+              onClick={() => setAppearanceTab('density')}
+            >
+              Layout Density
+            </button>
+          </div>
+
+          <div className="appearance-content">
+            {appearanceTab === 'font' && (
+              <div className="radio-group">
+                <label className="radio-label">
+                  <input
+                    type="radio"
+                    name="fontProfile"
+                    value="sans"
+                    checked={fontProfile === 'sans'}
+                    onChange={(e) => setFontProfile(e.target.value as FontProfile)}
+                  />
+                  <span>Sans-Serif</span>
+                  <span className="help-text-inline">Modern & Clean</span>
+                </label>
+                <label className="radio-label">
+                  <input
+                    type="radio"
+                    name="fontProfile"
+                    value="serif"
+                    checked={fontProfile === 'serif'}
+                    onChange={(e) => setFontProfile(e.target.value as FontProfile)}
+                  />
+                  <span>Serif</span>
+                  <span className="help-text-inline">Traditional & Formal</span>
+                </label>
+                <label className="radio-label">
+                  <input
+                    type="radio"
+                    name="fontProfile"
+                    value="mono"
+                    checked={fontProfile === 'mono'}
+                    onChange={(e) => setFontProfile(e.target.value as FontProfile)}
+                  />
+                  <span>Monospace</span>
+                  <span className="help-text-inline">Tech & Precise</span>
+                </label>
+              </div>
+            )}
+
+            {appearanceTab === 'density' && (
+              <div className="radio-group">
+                <label className="radio-label">
+                  <input
+                    type="radio"
+                    name="densityPreset"
+                    value="normal"
+                    checked={densityPreset === 'normal'}
+                    onChange={(e) => setDensityPreset(e.target.value as DensityPreset)}
+                  />
+                  <span>Normal</span>
+                  <span className="help-text-inline">Comfortable spacing</span>
+                </label>
+                <label className="radio-label">
+                  <input
+                    type="radio"
+                    name="densityPreset"
+                    value="compact"
+                    checked={densityPreset === 'compact'}
+                    onChange={(e) => setDensityPreset(e.target.value as DensityPreset)}
+                  />
+                  <span>Compact</span>
+                  <span className="help-text-inline">Tighter spacing</span>
+                </label>
+                <label className="radio-label">
+                  <input
+                    type="radio"
+                    name="densityPreset"
+                    value="ultra-compact"
+                    checked={densityPreset === 'ultra-compact'}
+                    onChange={(e) => setDensityPreset(e.target.value as DensityPreset)}
+                  />
+                  <span>Ultra-Compact</span>
+                  <span className="help-text-inline">Maximum density</span>
+                </label>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
