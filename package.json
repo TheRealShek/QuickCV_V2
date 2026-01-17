@@ -30,7 +30,8 @@
     "@types/node": "^20.11.5",
     "@types/pdfkit": "^0.13.4",
     "@vercel/node": "^3.0.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vercel": "^50.4.5"
   },
   "engines": {
     "node": ">=18.0.0"
