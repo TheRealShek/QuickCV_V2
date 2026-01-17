@@ -9,5 +9,14 @@ export default defineConfig({
     alias: {
       '@backend': path.resolve(__dirname, '../dist'),
     }
+  },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '')
+      }
+    }
   }
 })
