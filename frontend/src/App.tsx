@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { CircleEllipsis, User, FileText, Briefcase, GraduationCap, Wrench, FolderKanban, ChevronDown, X, ChevronUp, Check, Pencil } from 'lucide-react';
+import logoImage from './assets/file.png';
 import { ContactForm } from './components/ContactForm';
 import { SummaryForm } from './components/SummaryForm';
 import { ExperienceForm } from './components/ExperienceForm';
@@ -569,6 +570,26 @@ function App() {
         {/* Progress Indicator */}
         <div className="progress-indicator">
           <div className="progress-steps">
+            {/* Logo */}
+            <div className="progress-step-wrapper">
+              <div 
+                className="progress-step progress-step-logo"
+                onClick={() => window.location.reload()}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    window.location.reload();
+                  }
+                }}
+                aria-label="Reload application"
+              >
+                <img src={logoImage} alt="QuickCV Logo" className="progress-logo-image" />
+              </div>
+              <div className="progress-connector"></div>
+            </div>
+            
             {sectionOrder.map((section, index) => {
               const Icon = getSectionIcon(section);
               const isComplete = isSectionComplete(section);
@@ -608,18 +629,6 @@ function App() {
                 </div>
               );
             })}
-
-            {/* Appearance Button - part of progress column */}
-            <div className="progress-step-wrapper" style={{ marginTop: '1.5rem' }}>
-              <button
-                className={`appearance-btn ${isAppearanceOpen ? 'active' : ''}`}
-                onClick={() => setIsAppearanceOpen(!isAppearanceOpen)}
-                title="Appearance"
-                aria-label="Appearance"
-              >
-                <Pencil size={20} />
-              </button>
-            </div>
           </div>
         </div>
 
@@ -823,6 +832,16 @@ function App() {
           </div>
         </aside>
       </div>
+
+      {/* Appearance Button */}
+      <button
+        className={`appearance-btn ${isAppearanceOpen ? 'active' : ''}`}
+        onClick={() => setIsAppearanceOpen(!isAppearanceOpen)}
+        title="Appearance"
+        aria-label="Appearance"
+      >
+        <Pencil size={20} />
+      </button>
 
       {/* Appearance Panel */}
       {isAppearanceOpen && (
