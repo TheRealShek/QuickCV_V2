@@ -9,7 +9,7 @@
 
 import type { Resume } from '../types/resume.types';
 import type { Document } from '../types/document.types';
-import { transformResumeToDocument } from '../transformers/document-transformer';
+import { transformResumeToDocumentWithOrder } from '../transformers/resume-to-document.transformer';
 import { renderDocumentToPDF } from './pdf-renderer';
 
 /**
@@ -26,8 +26,8 @@ export async function generatePDFFromResume(
   resume: Resume,
   fontProfile: 'sans' | 'serif' | 'mono' = 'sans'
 ): Promise<Buffer> {
-  // Transform to document model
-  const document = transformResumeToDocument(resume);
+  // Transform to document model (using default section order for backward compatibility)
+  const document = transformResumeToDocumentWithOrder(resume);
   
   // Render to PDF
   return renderDocumentToPDF(document, fontProfile);

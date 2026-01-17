@@ -1,4 +1,23 @@
 /**
+ * ⚠️ DEPRECATED - DO NOT USE ⚠️
+ * 
+ * This file is LEGACY and UNUSED.
+ * 
+ * USE INSTEAD: resume-to-document.transformer.ts
+ * 
+ * This transformer does NOT support:
+ * - Custom section ordering
+ * - Skills categorization (Technical/Soft)
+ * - Latest formatting changes
+ * 
+ * Any changes made to this file will NOT appear in the PDF output.
+ * The active server (server.ts) uses resume-to-document.transformer.ts.
+ * 
+ * This file is kept only for reference during migration.
+ * It will be deleted in a future cleanup.
+ */
+
+/**
  * Resume to Document Transformer
  * 
  * Converts validated Resume data to intermediate Document model

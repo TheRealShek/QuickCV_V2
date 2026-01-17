@@ -20,9 +20,13 @@ export { isStructureSafe, getObjectDepth } from './utils/depth-check';
 
 // Document Transformation
 export {
-  transformResumeToDocument,
-  transformResumeToDocumentWithMetadata,
-} from './transformers/document-transformer';
+  transformResumeToDocumentWithOrder,
+  validateSectionOrder,
+  VALID_SECTION_KEYS,
+  DEFAULT_SECTION_ORDER,
+} from './transformers/resume-to-document.transformer';
+
+export type { SectionKey } from './transformers/resume-to-document.transformer';
 
 // PDF Rendering
 export {

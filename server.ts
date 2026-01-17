@@ -6,7 +6,7 @@
  */
 
 import { validateResume } from './dist/validators/resume-validator.js';
-import { transformResumeToDocumentWithOrder } from './dist/transformers/document-transformer-v2.js';
+import { transformResumeToDocumentWithOrder } from './dist/transformers/resume-to-document.transformer.js';
 import { renderDocumentToPDFWithMetadata } from './dist/renderer/pdf-renderer.js';
 import type { Resume } from './dist/types/resume.types.js';
 import type { ValidationError } from './dist/types/validation.types.js';
