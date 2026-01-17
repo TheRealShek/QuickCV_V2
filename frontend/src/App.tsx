@@ -81,7 +81,6 @@ function App() {
     loadFromStorage('densityPreset', 'normal')
   );
 
-  const [activeSection, setActiveSection] = useState<SectionKey>('contact');
   const [expandedAccordion, setExpandedAccordion] = useState<SectionKey | null>('contact');
   const [isAppearanceOpen, setIsAppearanceOpen] = useState(false);
   const [appearanceTab, setAppearanceTab] = useState<'font' | 'density'>('font');
