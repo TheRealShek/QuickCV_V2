@@ -4,14 +4,14 @@
  * Orchestrates all validation checks for complete resume data
  */
 
-import type { Resume } from '../types/resume.types';
+import type { Resume } from '../types/resume.types.js';
 import type {
   ValidationResult,
   ValidationError,
   ValidationLimits,
-} from '../types/validation.types';
-import { DEFAULT_VALIDATION_LIMITS } from '../types/validation.types';
-import { isStructureSafe } from '../utils/depth-check';
+} from '../types/validation.types.js';
+import { DEFAULT_VALIDATION_LIMITS } from '../types/validation.types.js';
+import { isStructureSafe } from '../utils/depth-check.js';
 import {
   validateContactInfo,
   validateProfessionalSummary,
@@ -19,7 +19,7 @@ import {
   validateEducation,
   validateSkills,
   validateProject,
-} from './field-validators';
+} from './field-validators.js';
 
 /**
  * Calculate the size of JSON data in bytes

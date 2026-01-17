@@ -24,7 +24,7 @@
  * for ATS-safe PDF rendering.
  */
 
-import type { Resume, WorkExperience, Education, Project } from '../types/resume.types';
+import type { Resume, WorkExperience, Education, Project } from '../types/resume.types.js';
 import type {
   Document,
   DocumentElement,
@@ -34,7 +34,7 @@ import type {
   TextLineElement,
   ListElement,
   SectionBreakElement,
-} from '../types/document.types';
+} from '../types/document.types.js';
 
 /**
  * Create a heading element

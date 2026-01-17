@@ -5,8 +5,8 @@
  * Does not modify v1 transformResumeToDocument() function.
  */
 
-import type { Resume } from '../types/resume.types';
-import type { Document, DocumentElement } from '../types/document.types';
+import type { Resume } from '../types/resume.types.js';
+import type { Document, DocumentElement } from '../types/document.types.js';
 
 /**
  * Valid section keys for ordering

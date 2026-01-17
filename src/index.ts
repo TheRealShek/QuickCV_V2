@@ -5,7 +5,7 @@
  */
 
 // Validation
-export { validateResume, isValidResume } from './validators/resume-validator';
+export { validateResume, isValidResume } from './validators/resume-validator.js';
 export {
   validateContactInfo,
   validateProfessionalSummary,
@@ -13,10 +13,10 @@ export {
   validateEducation,
   validateSkills,
   validateProject,
-} from './validators/field-validators';
+} from './validators/field-validators.js';
 
-export { sanitizeString, sanitizeStringArray, isSafeString } from './utils/sanitization';
-export { isStructureSafe, getObjectDepth } from './utils/depth-check';
+export { sanitizeString, sanitizeStringArray, isSafeString } from './utils/sanitization.js';
+export { isStructureSafe, getObjectDepth } from './utils/depth-check.js';
 
 // Document Transformation
 export {
@@ -24,17 +24,17 @@ export {
   validateSectionOrder,
   VALID_SECTION_KEYS,
   DEFAULT_SECTION_ORDER,
-} from './transformers/resume-to-document.transformer';
+} from './transformers/resume-to-document.transformer.js';
 
-export type { SectionKey } from './transformers/resume-to-document.transformer';
+export type { SectionKey } from './transformers/resume-to-document.transformer.js';
 
 // PDF Rendering
 export {
   generatePDFFromResume,
   generatePDFFromDocument,
-} from './renderer/resume-to-pdf';
+} from './renderer/resume-to-pdf.js';
 
-export { renderDocumentToPDF } from './renderer/pdf-renderer';
+export { renderDocumentToPDF } from './renderer/pdf-renderer.js';
 
 // Types - Resume Schema
 export type {
@@ -45,7 +45,7 @@ export type {
   Education,
   Skills,
   Project,
-} from './types/resume.types';
+} from './types/resume.types.js';
 
 // Types - Validation
 export type {
@@ -53,9 +53,9 @@ export type {
   ValidationError,
   ValidationErrorType,
   ValidationResult,
-} from './types/validation.types';
+} from './types/validation.types.js';
 
-export { DEFAULT_VALIDATION_LIMITS } from './types/validation.types';
+export { DEFAULT_VALIDATION_LIMITS } from './types/validation.types.js';
 
 // Types - Document Model
 export type {
@@ -71,4 +71,4 @@ export type {
   ListElement,
   ListItem,
   SectionBreakElement,
-} from './types/document.types';
+} from './types/document.types.js';

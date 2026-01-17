@@ -7,10 +7,10 @@
  * Validation must be performed separately before calling these functions.
  */
 
-import type { Resume } from '../types/resume.types';
-import type { Document } from '../types/document.types';
-import { transformResumeToDocumentWithOrder } from '../transformers/resume-to-document.transformer';
-import { renderDocumentToPDF } from './pdf-renderer';
+import type { Resume } from '../types/resume.types.js';
+import type { Document } from '../types/document.types.js';
+import { transformResumeToDocumentWithOrder } from '../transformers/resume-to-document.transformer.js';
+import { renderDocumentToPDF } from './pdf-renderer.js';
 
 /**
  * Generate PDF from validated Resume data

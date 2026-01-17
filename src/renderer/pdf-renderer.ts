@@ -13,7 +13,7 @@ import type {
   ParagraphElement,
   TextLineElement,
   ListElement,
-} from '../types/document.types';
+} from '../types/document.types.js';
 import {
   PAGE_CONFIG,
   CONTENT_WIDTH,
@@ -22,7 +22,7 @@ import {
   getFontsForProfile,
   getConfigForDensity,
   type DensityPreset,
-} from './renderer-config';
+} from './renderer-config.js';
 
 /**
  * Renderer state to track current position and page management

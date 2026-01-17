@@ -11,9 +11,9 @@ import type {
   Education,
   Skills,
   Project,
-} from '../types/resume.types';
-import type { ValidationError, ValidationLimits } from '../types/validation.types';
-import { isSafeString } from '../utils/sanitization';
+} from '../types/resume.types.js';
+import type { ValidationError, ValidationLimits } from '../types/validation.types.js';
+import { isSafeString } from '../utils/sanitization.js';
 
 /**
  * Validate required string field
