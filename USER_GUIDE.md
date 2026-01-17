@@ -2,6 +2,25 @@
 
 I built QuickCV to generate clean, ATS-friendly resumes from JSON. This guide shows you exactly what you need to know.
 
+## Testing the API
+
+To verify the API is working on your deployed instance:
+
+**Test Endpoint:** `https://your-deployment.vercel.app/api/test`
+
+This will return a JSON response with status information. If working correctly, you should see:
+```json
+{
+  "status": "ok",
+  "message": "Serverless function works",
+  "canImportValidator": true,
+  "nodeVersion": "v18.x.x",
+  "cwd": "/var/task"
+}
+```
+
+If you get an error response, check the deployment logs for more details.
+
 ## Quick Start
 
 I validate your data, transform it to a document model, then render it as PDF. Here's how:
