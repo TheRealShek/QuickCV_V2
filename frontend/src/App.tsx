@@ -7,12 +7,12 @@ import { ExperienceForm } from './components/ExperienceForm';
 import { EducationForm } from './components/EducationForm';
 import { SkillsForm } from './components/SkillsForm';
 import { ProjectsForm } from './components/ProjectsForm';
-import { validateResume } from '@backend/validators/resume-validator';
 import type { Resume, ContactInfo, ProfessionalSummary, WorkExperience, Education, Skills, Project, SectionKey, FontProfile, DensityPreset } from './types';
 import './App.css';
 
 const STORAGE_KEY = 'quickcv_resume_data';
 const SAVE_INTERVAL = 10000; // 10 seconds
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 // Load from localStorage or return default
 function loadFromStorage<T>(key: string, defaultValue: T): T {
@@ -26,6 +26,46 @@ function loadFromStorage<T>(key: string, defaultValue: T): T {
     console.error('Failed to load from localStorage:', error);
   }
   return defaultValue;
+}
+
+// Simple client-side validation for loaded JSON
+function validateResumeStructure(data: any): { isValid: boolean; errors: string[] } {
+  const errors: string[] = [];
+  
+  if (!data || typeof data !== 'object') {
+    errors.push('Resume data must be an object');
+    return { isValid: false, errors };
+  }
+  
+  // Check required fields
+  if (!data.contact || typeof data.contact !== 'object') {
+    errors.push('Contact information is required');
+  } else {
+    if (!data.contact.fullName) errors.push('Full name is required');
+    if (!data.contact.email) errors.push('Email is required');
+  }
+  
+  if (!data.summary || typeof data.summary !== 'object') {
+    errors.push('Professional summary is required');
+  }
+  
+  if (!Array.isArray(data.experience)) {
+    errors.push('Experience must be an array');
+  }
+  
+  if (!Array.isArray(data.education)) {
+    errors.push('Education must be an array');
+  }
+  
+  if (!data.skills || typeof data.skills !== 'object') {
+    errors.push('Skills section is required');
+  }
+  
+  if (!Array.isArray(data.projects)) {
+    errors.push('Projects must be an array');
+  }
+  
+  return { isValid: errors.length === 0, errors };
 }
 
 function App() {
@@ -272,7 +312,7 @@ function App() {
       setPreviewError(null);
 
       try {
-        const response = await fetch('/api/generate-pdf', {
+        const response = await fetch(`${API_URL}/generate-pdf`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -326,7 +366,7 @@ function App() {
     };
 
     try {
-      const response = await fetch('/api/generate-pdf', {
+      const response = await fetch(`${API_URL}/generate-pdf`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -414,13 +454,11 @@ function App() {
       const text = await file.text();
       const data = JSON.parse(text);
 
-      // Validate using shared validator (single source of truth)
-      const validationResult = validateResume(data);
+      // Validate using simple client-side check
+      const validationResult = validateResumeStructure(data);
 
       if (!validationResult.isValid) {
-        const errorMsg = validationResult.errors
-          .map((err: any) => `${err.field}: ${err.message}`)
-          .join('\n');
+        const errorMsg = validationResult.errors.join('\n');
         alert(`Validation failed:\n\n${errorMsg}`);
         return;
       }
