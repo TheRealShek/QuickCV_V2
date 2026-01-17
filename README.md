@@ -73,7 +73,7 @@ src/
 │   ├── field-validators.ts   # Section validators
 │   └── resume-validator.ts   # Main validator
 ├── transformers/       # Document transformation
-│   └── document-transformer.ts
+│   └── resume-to-document.transformer.ts
 ├── renderer/           # PDF generation
 │   ├── renderer-config.ts    # Fixed layout settings
 │   ├── pdf-renderer.ts       # PDFKit renderer
@@ -100,9 +100,14 @@ if (!result.isValid) {
 
 **Document Transformation**
 ```typescript
-import { transformResumeToDocument } from './src/index';
+import { transformResumeToDocumentWithOrder } from './src/index';
 
-const document = transformResumeToDocument(validatedResume);
+// With default section order
+const document = transformResumeToDocumentWithOrder(validatedResume);
+
+// With custom section order
+const customOrder = ['contact', 'skills', 'experience', 'projects', 'education', 'summary'];
+const document = transformResumeToDocumentWithOrder(validatedResume, customOrder);
 ```
 
 **PDF Generation**

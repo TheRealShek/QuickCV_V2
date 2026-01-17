@@ -1,378 +1,242 @@
-# QuickCV v2 - User Guide
+# QuickCV - User Guide
 
-Practical guide for developers using QuickCV programmatically.
+I built QuickCV to generate clean, ATS-friendly resumes from JSON. This guide shows you exactly what you need to know.
 
-## Resume JSON Structure
+## Quick Start
 
-### Complete Schema
+I validate your data, transform it to a document model, then render it as PDF. Here's how:
 
 ```typescript
-{
-  "contact": {
-    "fullName": string,           // Required
-    "email": string,              // Required
-    "phone": string,              // Required
-    "location": string,           // Required
-    "linkedin"?: string,          // Optional
-    "github"?: string,            // Optional
-    "portfolio"?: string,         // Optional
-    "twitter"?: string            // Optional
-  },
-  "summary": {
-    "summary": string             // Required (2-4 sentences)
-  },
-  "experience": [                 // Array of work experiences
-    {
-      "company": string,          // Required
-      "role": string,             // Required
-      "startDate": string,        // Required (flexible format)
-      "endDate"?: string,         // Optional
-      "location"?: string,        // Optional
-      "description": string[]     // Required (bullet points)
-    }
-  ],
-  "education": [                  // Array of education entries
-    {
-      "institution": string,      // Required
-      "degree": string,           // Required
-      "startDate": string,        // Required (flexible format)
-      "endDate"?: string,         // Optional
-      "fieldOfStudy"?: string     // Optional
-    }
-  ],
-  "skills": {
-    "skills": string[]            // Required (flat list)
-  },
-  "projects": [                   // Array of projects
-    {
-      "name": string,             // Required
-      "description": string[],    // Required (bullet points)
-      "techStack"?: string[],     // Optional
-      "link"?: string             // Optional
-    }
-  ]
+import { validateResume, generatePDFFromResume } from './src/index';
+import { writeFile } from 'fs/promises';
+
+const resumeData = { /* your JSON */ };
+
+// Step 1: Validate
+const result = validateResume(resumeData);
+if (!result.isValid) {
+  console.error('Fix these:', result.errors);
+  process.exit(1);
 }
+
+// Step 2: Generate PDF
+const pdfBuffer = await generatePDFFromResume(resumeData);
+
+// Step 3: Save
+await writeFile('resume.pdf', pdfBuffer);
 ```
 
-### Minimal Example
+That's it. Now let me show you what your JSON should look like.
+
+## Resume Structure
+
+I need six sections from you. Here's what each one looks like:
+
+## Resume Structure
+
+I need six sections from you. Here's what each one looks like:
+
+### Contact (required fields only)
 
 ```json
 {
   "contact": {
     "fullName": "Jane Doe",
-    "email": "jane.doe@example.com",
+    "email": "jane@example.com",
     "phone": "+1-555-0123",
     "location": "San Francisco, CA",
-    "linkedin": "linkedin.com/in/janedoe",
-    "github": "github.com/janedoe"
-  },
+    "linkedin": "linkedin.com/in/janedoe",  // optional
+    "github": "github.com/janedoe",         // optional
+    "portfolio": "janedoe.com"              // optional
+  }
+}
+```
+
+### Summary (2-4 sentences)
+
+```json
+{
   "summary": {
-    "summary": "Software engineer with 5 years of experience building scalable web applications. Specialized in TypeScript, React, and Node.js."
-  },
+    "summary": "Software engineer with 5 years building scalable web apps. I specialize in TypeScript, React, and Node.js. Currently focused on microservices and cloud infrastructure."
+  }
+}
+```
+
+### Experience
+
+```json
+{
   "experience": [
     {
       "company": "Tech Corp",
       "role": "Senior Software Engineer",
-      "location": "San Francisco, CA",
+      "location": "San Francisco, CA",        // optional
       "startDate": "Jan 2021",
-      "endDate": "Present",
+      "endDate": "Present",                   // or leave empty for current
       "description": [
-        "Led development of microservices architecture serving 1M+ users",
-        "Reduced API response time by 40% through optimization",
+        "Led development of microservices serving 1M+ users",
+        "Reduced API latency by 40% through caching",
         "Mentored 3 junior developers"
       ]
-    }
-  ],
-  "education": [
-    {
-      "institution": "University of California",
-      "degree": "Bachelor of Science",
-      "fieldOfStudy": "Computer Science",
-      "startDate": "2015",
-      "endDate": "2019"
-    }
-  ],
-  "skills": {
-    "skills": ["TypeScript", "React", "Node.js", "PostgreSQL", "Docker", "AWS"]
-  },
-  "projects": [
-    {
-      "name": "Open Source Library",
-      "description": [
-        "Built and maintained TypeScript library with 10k+ downloads",
-        "Implemented comprehensive test suite with 95% coverage"
-      ],
-      "techStack": ["TypeScript", "Jest", "GitHub Actions"],
-      "link": "github.com/janedoe/project"
     }
   ]
 }
 ```
 
-## Workflow
+**About dates:** I don't validate format. Use whatever reads well: "Jan 2024", "2024", "January 2024". Use "Present" for current roles.
 
-### Step 1: Validate Resume Data
+### Education
 
-Always validate data before rendering:
-
-```typescript
-import { validateResume } from './src/index';
-
-const resumeData = { /* your resume JSON */ };
-
-const validationResult = validateResume(resumeData);
-
-if (!validationResult.isValid) {
-  // Handle validation errors
-  validationResult.errors.forEach(error => {
-    console.error(`${error.field}: ${error.message}`);
-  });
-  throw new Error('Resume validation failed');
-}
-
-// Data is now safe to use
-```
-
-### Step 2: Generate PDF
-
-After validation, generate the PDF:
-
-```typescript
-import { generatePDFFromResume } from './src/index';
-import { writeFile } from 'fs/promises';
-
-// Assumes resumeData is already validated
-const pdfBuffer = await generatePDFFromResume(resumeData);
-
-// Save to file
-await writeFile('output/resume.pdf', pdfBuffer);
-
-// Or send as HTTP response (Express example)
-// res.setHeader('Content-Type', 'application/pdf');
-// res.send(pdfBuffer);
-```
-
-### Complete Example
-
-```typescript
-import { validateResume, generatePDFFromResume } from './src/index';
-import { writeFile } from 'fs/promises';
-import { readFile } from 'fs/promises';
-
-async function generateResumePDF(jsonPath: string, outputPath: string) {
-  try {
-    // Load resume data
-    const jsonData = await readFile(jsonPath, 'utf-8');
-    const resumeData = JSON.parse(jsonData);
-    
-    // Validate
-    const validationResult = validateResume(resumeData);
-    
-    if (!validationResult.isValid) {
-      console.error('Validation failed:');
-      validationResult.errors.forEach(err => {
-        console.error(`  - ${err.field}: ${err.message}`);
-      });
-      return false;
+```json
+{
+  "education": [
+    {
+      "institution": "UC Berkeley",
+      "degree": "Bachelor of Science",
+      "fieldOfStudy": "Computer Science",     // optional
+      "startDate": "2015",
+      "endDate": "2019"                       // optional
     }
-    
-    console.log('✓ Validation passed');
-    
-    // Generate PDF
-    const pdfBuffer = await generatePDFFromResume(resumeData);
-    
-    // Save
-    await writeFile(outputPath, pdfBuffer);
-    console.log(`✓ PDF saved to ${outputPath}`);
-    
-    return true;
-  } catch (error) {
-    console.error('Error:', error);
-    return false;
-  }
+  ]
 }
-
-// Usage
-generateResumePDF('resume.json', 'output/resume.pdf');
 ```
-
-## Advanced Usage
-
-### Custom Validation Limits
-
-```typescript
-import { validateResume, DEFAULT_VALIDATION_LIMITS } from './src/index';
-
-const customLimits = {
-  ...DEFAULT_VALIDATION_LIMITS,
-  maxExperienceEntries: 10,
-  maxSkillsCount: 50,
-};
-
-const result = validateResume(resumeData, customLimits);
-```
-
-### Document Model Access
-
-For custom processing or inspection:
-
-```typescript
-import { transformResumeToDocument, generatePDFFromDocument } from './src/index';
-
-// Transform to document model
-const document = transformResumeToDocument(validatedResume);
-
-// Inspect or modify document structure
-console.log(`Document has ${document.elements.length} elements`);
-
-// Generate PDF from document
-const pdfBuffer = await generatePDFFromDocument(document);
-```
-
-## Field Guidelines
-
-### Dates
-- No strict format required
-- Accept human-readable strings: "Jan 2024", "2024-01", "January 2024"
-- Use "Present" for current positions
-
-### Descriptions
-- Keep bullet points concise (under 100 characters recommended)
-- Maximum 10 bullets per experience/project (enforced by validation)
-- Plain text only (no formatting)
 
 ### Skills
 
-**Storage:**
-- Entered as flat array of strings: `["React", "AWS", "PostgreSQL"]`
-- No categories in JSON schema
-- Maximum 100 skills (enforced by validation)
-
-**Automatic Categorization:**
-- Skills are automatically grouped by keywords during PDF generation
-- Categories: Frontend, Backend, Mobile, Database, Cloud & DevOps, API, Testing, Security, Data, AI & ML, Tools, Operating Systems, Networking, Architecture, CMS, Game Development, Other
-- Unknown skills default to "Other" category
-- Deterministic and stable ordering
-
-**User Override:**
-- Prefix any skill with `Category: ` to force specific categorization
-- Prefix is stripped in PDF output (invisible to readers)
-- Examples:
-  - `"Frontend: Elm"` → Frontend category
-  - `"AI & ML: TensorFlow"` → AI & ML category
-  - `"Mobile: Flutter"` → Mobile category
-
-**PDF Output Format:**
-```
-Frontend: React, TypeScript, Elm
-Backend: Node.js, Python
-Cloud & DevOps: AWS, Docker
-AI & ML: TensorFlow
-Other: UnknownTool
-```
-
-**Example Input:**
 ```json
 {
   "skills": {
-    "skills": [
-      "React",
-      "AWS",
-      "Frontend: Elm",
-      "AI & ML: TensorFlow",
-      "PostgreSQL"
-    ]
+    "skills": ["TypeScript", "React", "AWS", "PostgreSQL", "Docker"]
   }
 }
 ```
 
-**Resulting PDF:**
+**I auto-categorize these for you.** I'll group React under "Frontend", PostgreSQL under "Database", AWS under "Cloud & DevOps", etc. If I don't recognize something, it goes to "Other".
+
+**Want control?** Prefix with category: `"Frontend: Elm"`. I'll strip the prefix in the PDF output.
+
+### Projects
+
+```json
+{
+  "projects": [
+    {
+      "name": "CLI Tool",
+      "description": [
+        "Built command-line tool with 5k+ downloads",
+        "Comprehensive test suite with 95% coverage"
+      ],
+      "techStack": ["Go", "Cobra", "GitHub Actions"],  // optional
+      "link": "github.com/you/project"                  // optional
+    }
+  ]
+}
 ```
-Frontend: React, Elm
-Database: PostgreSQL
-Cloud & DevOps: AWS
-AI & ML: TensorFlow
+
+## Custom Section Order
+
+By default, I render sections in this order: Contact → Summary → Experience → Education → Skills → Projects.
+
+Want a different order? Pass it as the second argument:
+
+```typescript
+import { transformResumeToDocumentWithOrder, generatePDFFromResume } from './src/index';
+
+const customOrder = ['contact', 'skills', 'experience', 'projects', 'education', 'summary'];
+
+// Option 1: Transform with order, then render
+const document = transformResumeToDocumentWithOrder(resumeData, customOrder);
+const pdfBuffer = await generatePDFFromDocument(document);
+
+// Option 2: Direct generation (uses default order)
+const pdfBuffer = await generatePDFFromResume(resumeData);
 ```
 
-### Links
-- Include protocol-less URLs: "github.com/user" or full "https://github.com/user"
-- Rendered as plain text in PDF (clickable if full URL)
+**Rules:**
+- Contact is always first (I enforce this)
+- Any missing sections get added at the end in default order
+- Invalid section names are ignored
 
-## Validation Errors
+## What I Validate
 
-Common validation error types:
+I check these limits to keep your resume reasonable and safe:
 
-- `REQUIRED_FIELD_MISSING`: Required field is empty or undefined
-- `INVALID_TYPE`: Field has wrong data type
-- `STRING_TOO_LONG`: Text exceeds maximum length
-- `ARRAY_TOO_LARGE`: Array exceeds maximum size
-- `UNSAFE_CONTENT`: String contains unsafe characters
-- `DEPTH_EXCEEDED`: Object nesting too deep
-- `SIZE_EXCEEDED`: Total JSON size too large
+- **Max experience entries:** 20
+- **Max education entries:** 10  
+- **Max projects:** 15
+- **Max skills:** 100
+- **Max bullets per section:** 10
+- **Max string length:** 1000 characters
+- **Max JSON size:** 1MB
+- **Max nesting depth:** 5 levels
 
-## Limitations
+I also strip dangerous characters (null bytes, control chars) to prevent XSS.
 
-### What is NOT Supported (v1)
+## Common Errors
 
-**Schema:**
-- Custom sections beyond the defined 6 sections
-- Multiple summary sections
-- Rich text or formatting in any field
-- Metadata (IDs, timestamps in rendered output)
+**"REQUIRED_FIELD_MISSING"** → You left out a required field (name, email, phone, etc.)
 
-**PDF Rendering:**
-- Custom fonts or font embedding
-- Configurable spacing, margins, or sizes
+**"STRING_TOO_LONG"** → One of your text fields exceeds 1000 characters
+
+**"ARRAY_TOO_LARGE"** → Too many items (e.g., 25 experience entries when max is 20)
+
+**"UNSAFE_CONTENT"** → Your text has null bytes or control characters. Check encoding.
+
+## What I Don't Support
+
+I'm optimized for ATS compatibility, so I intentionally skip:
+
 - Multiple columns or table layouts
-- Images, logos, or graphics
-- Custom bullet styles
+- Images, logos, icons
+- Rich text (bold, italic, colors)
+- Custom fonts (I use Helvetica)
+- Custom spacing or margins
 - Page headers/footers
-- Custom templates or themes
 
-**Functionality:**
-- Browser-based rendering (server-side only)
-- Real-time preview
-- PDF editing or updates
-- Multiple output formats (only PDF)
+If you need these, QuickCV isn't the right tool.
 
-### By Design
+## PDF Output
 
-**Date Flexibility:**
-- Dates are plain text (not parsed or formatted)
-- No date validation or standardization
-- Allows "Present", "Current", or any readable format
+Here's what you get:
 
-**Fixed Layout:**
-- All spacing and sizing is non-configurable
-- Single column, top-to-bottom order
-- Helvetica font family only
-- US Letter page size only
+- **Format:** US Letter (8.5" × 11"), 0.75" margins
+- **Font:** Helvetica family (sans-serif)
+- **Layout:** Single column, top-to-bottom
+- **Text:** Fully selectable and searchable
+- **ATS-safe:** No parsing tricks, no complex structures
 
-**Security:**
-- Maximum JSON size: 1MB
-- Maximum object depth: 5 levels
-- XSS protection via HTML escaping
-- Prototype pollution prevention
+## Tips
 
-## Troubleshooting
+**Bullet points:** Keep them under 100 characters. I enforce 1000 char max, but shorter is better.
 
-**Validation fails with "unsafe content":**
-- Check for null bytes or control characters
-- Ensure UTF-8 encoding
-- Remove any embedded scripts or HTML
+**Dates:** "Jan 2024", "2024-01", "January 2024" all work. I don't parse dates.
 
-**PDF text not selectable:**
-- This should not happen with QuickCV (text-based rendering)
-- Report as bug if encountered
+**Links:** Include full URLs (`https://github.com/user`) or protocol-less (`github.com/user`). Both work.
 
-**Large JSON rejected:**
-- Default limit is 1MB
-- Reduce content or increase limits via custom validation config
+**Skills:** List them flat. I'll categorize them automatically. Override with `"Category: Skill"` if needed.
 
-**Page breaks in wrong places:**
-- Renderer uses minimum space logic to prevent orphaned lines
-- Page breaks occur between logical units (paragraphs, list items)
+## Need More Control?
 
-## Version
+If you want to inspect or modify the document before rendering:
 
-1.0.0
+```typescript
+import { transformResumeToDocumentWithOrder, generatePDFFromDocument } from './src/index';
+
+// Get the document model
+const document = transformResumeToDocumentWithOrder(resumeData);
+
+// Inspect it
+console.log(`Document has ${document.elements.length} elements`);
+
+// Modify if needed (advanced)
+// ... your custom logic ...
+
+// Render to PDF
+const pdfBuffer = await generatePDFFromDocument(document);
+```
+
+## Questions?
+
+Read `README.md` for architecture details. Check the source code in `src/` if you need to understand how I transform or render specific sections.
+
+That's everything you need to know.
