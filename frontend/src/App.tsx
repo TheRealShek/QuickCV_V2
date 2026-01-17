@@ -296,7 +296,8 @@ function App() {
 
         // Extract page count from response header
         const pageCountHeader = response.headers.get('X-PDF-Page-Count');
-        const pageCount = pageCountHeader ? parseInt(pageCountHeader, 10) : null;
+        const parsedCount = pageCountHeader ? parseInt(pageCountHeader, 10) : null;
+        const pageCount = parsedCount && parsedCount > 0 ? parsedCount : null;
 
         // Create new preview
         const blob = await response.blob();
@@ -778,7 +779,7 @@ function App() {
                 <h3>Preview</h3>
               </div>
 
-              {previewState === 'ready' && previewPageCount !== null && (
+              {previewState === 'ready' && previewPageCount && previewPageCount > 0 && (
                 <div className={`preview-page-status ${previewPageCount === 1 ? 'status-success' : 'status-warning'}`}>
                   {previewPageCount === 1 ? (
                     <>
@@ -787,20 +788,8 @@ function App() {
                     </>
                   ) : (
                     <>
-                      <div className="status-header">
-                        <span className="status-icon">⚠</span>
-                        <span>Resume spans {previewPageCount} pages</span>
-                      </div>
-                      <div className="status-guidance">
-                        <strong>How to fit on one page:</strong>
-                        <ul>
-                          <li><strong>Quick fix:</strong> Try "Compact" or "Ultra-Compact" density (left panel)</li>
-                          <li><strong>Content:</strong> Trim older experience bullets to 2-3 per role</li>
-                          <li><strong>Sections:</strong> Reduce projects list or combine short bullet points</li>
-                          <li><strong>Skills:</strong> List only most relevant skills (8-12 max)</li>
-                        </ul>
-                        <p className="status-tip">💡 Most recruiters prefer one-page resumes for roles with &lt;10 years experience</p>
-                      </div>
+                      <span className="status-icon">⚠</span>
+                      <span>Resume spans {previewPageCount} pages</span>
                     </>
                   )}
                 </div>
