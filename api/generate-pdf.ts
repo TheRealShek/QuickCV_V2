@@ -2,11 +2,11 @@
  * Vercel Serverless Function for PDF Generation
  */
 
-import { validateResume } from '../dist/validators/resume-validator';
-import { transformResumeToDocumentWithOrder } from '../dist/transformers/resume-to-document.transformer';
-import { renderDocumentToPDFWithMetadata } from '../dist/renderer/pdf-renderer';
-import type { Resume } from '../dist/types/resume.types';
-import type { ValidationError } from '../dist/types/validation.types';
+import { validateResume } from '../dist/validators/resume-validator.js';
+import { transformResumeToDocumentWithOrder } from '../dist/transformers/resume-to-document.transformer.js';
+import { renderDocumentToPDFWithMetadata } from '../dist/renderer/pdf-renderer.js';
+import type { Resume } from '../dist/types/resume.types.js';
+import type { ValidationError } from '../dist/types/validation.types.js';
 
 interface GeneratePDFRequest {
   resume: unknown;
