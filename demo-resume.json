@@ -125,5 +125,6 @@
     "projects"
   ],
   "combinedExperienceProjects": false,
-  "fontProfile": "sans"
+  "fontProfile": "sans",
+  "densityPreset": "normal"
 }

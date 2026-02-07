@@ -75,7 +75,8 @@ function getEffectiveSectionOrder(baseOrder: SectionKey[], combined: boolean): s
   }
   
   // Replace 'experience' and 'projects' with 'experienceProjects'
-  const order = baseOrder.filter(s => s !== 'experience' && s !== 'projects');
+  // Also filter out any existing 'experienceProjects' to prevent duplicates
+  const order = baseOrder.filter(s => s !== 'experience' && s !== 'projects' && s !== 'experienceProjects') as string[];
   
   // Find where experience or projects was and insert combined section there
   const expIndex = baseOrder.indexOf('experience');
@@ -467,6 +468,8 @@ function App() {
       projects,
       sectionOrder,
       combinedExperienceProjects,
+      fontProfile,
+      densityPreset,
     };
 
     // Convert to JSON string
@@ -543,6 +546,14 @@ function App() {
       // Load combinedExperienceProjects flag if present
       if (typeof data.combinedExperienceProjects === 'boolean') {
         setCombinedExperienceProjects(data.combinedExperienceProjects);
+      }
+
+      // Load font and density settings if present
+      if (data.fontProfile && ['sans', 'serif', 'mono'].includes(data.fontProfile)) {
+        setFontProfile(data.fontProfile);
+      }
+      if (data.densityPreset && ['normal', 'compact', 'ultra-compact'].includes(data.densityPreset)) {
+        setDensityPreset(data.densityPreset);
       }
 
       alert('Resume loaded successfully!');
