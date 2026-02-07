@@ -1,220 +1,94 @@
 # QuickCV v2
 
-Production-ready, ATS-friendly resume builder with text-based PDF generation.
+Generate ATS-friendly, text-based PDF resumes from JSON data.
 
-## Overview
+## Features
 
-QuickCV v2 is a TypeScript library for generating ATS-compliant PDF resumes from JSON data. It emphasizes correctness, predictability, and ATS compatibility over visual complexity.
+Text-based PDF output (selectable, searchable, ATS-compatible)  
+Strict validation with XSS protection  
+Job title field under name  
+Combined Experience & Projects section toggle  
+Custom section ordering  
+Automatic skills categorization  
+Multiple font profiles (Sans, Serif, Mono)  
+Three density presets (Normal, Compact, Ultra-Compact)
 
-**Key Features:**
-- Strict schema validation with XSS protection
-- Text-based PDF output (selectable, searchable, copy-pastable)
-- Single-column layout for maximum ATS compatibility
-- Deterministic rendering (no configuration knobs)
-- Server-side only (Node.js)
-
-## Architecture
-
-The system follows a three-layer pipeline:
-
-```
-Resume JSON → Validation → Document Model → PDF Rendering
-```
-
-### Layer 1: Validation (`src/validators/`)
-- Schema validation against fixed resume structure
-- Size and depth limits (prototype pollution protection)
-- String sanitization (XSS-safe)
-- Returns structured validation errors
-
-### Layer 2: Document Transformation (`src/transformers/`)
-- Converts validated Resume to intermediate Document model
-- Layout-oriented (headings, paragraphs, lists)
-- Preserves content structure without styling
-- Fixed section ordering
-
-### Layer 3: PDF Rendering (`src/renderer/`)
-- Consumes Document model (assumes pre-validated input)
-- Uses PDFKit for text-based PDF generation
-- Fixed spacing, fonts, and layout
-- Automatic pagination with logical breaks
-
-## Installation
-
-### Prerequisites
-- Node.js >= 18.0.0
-- Bun package manager
-
-### Local Setup
+## Quick Start
 
 ```bash
-# Clone or navigate to project directory
-cd QuickCV_V2
-
-# Install dependencies
-bun install
-
-# Build TypeScript
-bun run build
-
-# Type check (optional)
-bun run type-check
+npm install
+npm run build
+npm run dev
 ```
 
-### Project Structure
+Open http://localhost:5173
 
-```
-src/
-├── types/              # TypeScript type definitions
-│   ├── resume.types.ts       # Resume schema
-│   ├── validation.types.ts   # Validation configuration
-│   └── document.types.ts     # Document model
-├── validators/         # Validation layer
-│   ├── field-validators.ts   # Section validators
-│   └── resume-validator.ts   # Main validator
-├── transformers/       # Document transformation
-│   └── resume-to-document.transformer.ts
-├── renderer/           # PDF generation
-│   ├── renderer-config.ts    # Fixed layout settings
-│   ├── pdf-renderer.ts       # PDFKit renderer
-│   └── resume-to-pdf.ts      # Public API
-├── utils/              # Utilities
-│   ├── sanitization.ts       # XSS protection
-│   └── depth-check.ts        # Security checks
-└── index.ts            # Public exports
-```
+## JSON Schema
 
-## API Overview
-
-### Core Functions
-
-**Validation**
-```typescript
-import { validateResume, isValidResume } from './src/index';
-
-const result = validateResume(data);
-if (!result.isValid) {
-  console.error(result.errors);
+```json
+{
+  "contact": {
+    "fullName": "Your Name",
+    "jobTitle": "Backend Developer",
+    "email": "you@example.com",
+    "phone": "+1-555-0100",
+    "location": "City, State",
+    "linkedin": "linkedin.com/in/you",
+    "github": "github.com/you",
+    "portfolio": "your-site.com"
+  },
+  "summary": {
+    "summary": "Professional summary..."
+  },
+  "experience": [...],
+  "education": [...],
+  "skills": { "skills": ["React", "Node.js"] },
+  "projects": [...],
+  "combinedExperienceProjects": false
 }
 ```
 
-**Document Transformation**
-```typescript
-import { transformResumeToDocumentWithOrder } from './src/index';
+## Key Features
 
-// With default section order
-const document = transformResumeToDocumentWithOrder(validatedResume);
+**Job Title**  
+Optional field in contact section. Displays under your name in the resume header.
 
-// With custom section order
-const customOrder = ['contact', 'skills', 'experience', 'projects', 'education', 'summary'];
-const document = transformResumeToDocumentWithOrder(validatedResume, customOrder);
-```
+**Combined Sections**  
+Set `combinedExperienceProjects: true` to merge experience and projects into one section. Toggle available in UI under Appearance → Sections.
 
-**PDF Generation**
-```typescript
-import { generatePDFFromResume } from './src/index';
+**Contact Format**  
+Line 1: email | phone | location  
+Line 2: LinkedIn | GitHub | Portfolio
 
-const pdfBuffer = await generatePDFFromResume(validatedResume);
-```
+**Section Ordering**  
+Drag to reorder sections in the UI, or modify `sectionOrder` array in JSON.
 
-**Complete Pipeline**
+**Customization**  
+Font profile, density, margins, and line spacing configurable via `style` object.
+
+## API Usage
+
 ```typescript
 import { validateResume, generatePDFFromResume } from './src/index';
-import { writeFile } from 'fs/promises';
 
 const result = validateResume(resumeData);
 if (result.isValid) {
   const pdfBuffer = await generatePDFFromResume(resumeData);
-  await writeFile('resume.pdf', pdfBuffer);
 }
 ```
 
-## Resume Schema
+## Deployment
 
-The resume data model is **fixed** and includes only:
+Configured for Vercel. API endpoint: `/api/generate-pdf`
 
-- **Contact Information**: name, email, phone, location, links
-- **Professional Summary**: 2-4 sentence plain text
-- **Work Experience**: company, role, dates, description bullets
-- **Education**: institution, degree, field, dates
-- **Skills**: flat list with automatic categorization in PDF output
-- **Projects**: name, description, tech stack, link
+## Documentation
 
-### Skills Categorization
+USER_GUIDE.md - Complete schema reference  
+PROJECT_GUIDELINES.md - Architecture overview
 
-Skills are stored as a flat array but automatically grouped in PDF output:
-
-**Input (JSON):**
-```json
-{
-  "skills": {
-    "skills": ["React", "AWS", "Frontend: Elm", "PostgreSQL"]
-  }
-}
-```
-
-**Output (PDF):**
-```
-Frontend: React, Elm
-Database: PostgreSQL
-Cloud & DevOps: AWS
-```
-
-- **Automatic**: Keyword-based grouping into 17 categories
-- **Override**: Prefix skills with `Category: Skill` to force placement
-- **ATS-Safe**: Prefix stripped in final output, plain text preserved
-- **Deterministic**: Stable category order, unknown skills → Other
-
-See `USER_GUIDE.md` for detailed schema and examples.
-
-## PDF Output Specifications
-
-**Format:**
-- US Letter (8.5" × 11")
-- 0.75" margins
-- Helvetica font family
-- Single-column layout
-
-**ATS Guarantees:**
-- Text-based (not image/canvas)
-- Selectable and searchable text
-- Predictable top-to-bottom reading order
-- No tables, icons, or complex layouts
-
-## Development
-
-**Build Commands:**
-```bash
-bun run build       # Compile TypeScript
-bun run dev         # Watch mode
-bun run type-check  # Type checking only
-```
-
-**TypeScript Configuration:**
-- Strict mode enabled
-- ES2022 target
-- ESM modules
-
-## Limitations (v1)
-
-**Not Supported:**
-- Custom templates or themes
-- Rich text formatting (bold, italic)
-- Multiple columns or tables
-- Images, logos, or icons
-- Configurable fonts or spacing
-- Browser-based rendering
-- Custom sections beyond defined schema
-
-**By Design:**
-- Date fields accept flexible human-readable strings (not validated for format)
-- All layout values are fixed and non-configurable
-- Rendering assumes pre-validated input
+Test endpoint: `https://your-app.vercel.app/api/test`
 
 ## License
 
 MIT
 
-## Version
-
-1.0.0

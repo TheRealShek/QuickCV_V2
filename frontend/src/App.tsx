@@ -184,6 +184,36 @@ function App() {
   useEffect(() => { densityPresetRef.current = densityPreset; }, [densityPreset]);
   useEffect(() => { combinedExperienceProjectsRef.current = combinedExperienceProjects; }, [combinedExperienceProjects]);
 
+  // Update section order when combined flag changes
+  useEffect(() => {
+    if (combinedExperienceProjects) {
+      // Replace experience and projects with experienceProjects
+      const newOrder = sectionOrder.filter(s => s !== 'experience' && s !== 'projects');
+      const expIndex = sectionOrder.indexOf('experience');
+      const projIndex = sectionOrder.indexOf('projects');
+      const insertIndex = Math.min(
+        expIndex >= 0 ? expIndex : Infinity,
+        projIndex >= 0 ? projIndex : Infinity
+      );
+      
+      if (insertIndex !== Infinity && !newOrder.includes('experienceProjects')) {
+        newOrder.splice(insertIndex, 0, 'experienceProjects');
+        setSectionOrder(newOrder);
+      }
+    } else {
+      // Replace experienceProjects with experience and projects
+      if (sectionOrder.includes('experienceProjects')) {
+        const newOrder = sectionOrder.filter(s => s !== 'experienceProjects');
+        const expProjIndex = sectionOrder.indexOf('experienceProjects');
+        
+        if (expProjIndex >= 0) {
+          newOrder.splice(expProjIndex, 0, 'experience', 'projects');
+          setSectionOrder(newOrder);
+        }
+      }
+    }
+  }, [combinedExperienceProjects]);
+
   // Handle appearance panel close on outside click or Escape key
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
