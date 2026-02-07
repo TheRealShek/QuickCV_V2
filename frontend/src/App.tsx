@@ -69,13 +69,13 @@ function validateResumeStructure(data: any): { isValid: boolean; errors: string[
 }
 
 // Get effective section order based on combined setting
-function getEffectiveSectionOrder(baseOrder: SectionKey[], combined: boolean): string[] {
+function getEffectiveSectionOrder(baseOrder: SectionKey[], combined: boolean): SectionKey[] {
   if (!combined) {
     return baseOrder;
   }
   
   // Replace 'experience' and 'projects' with 'experienceProjects'
-  const order = baseOrder.filter(s => s !== 'experience' && s !== 'projects');
+  const order = baseOrder.filter(s => s !== 'experience' && s !== 'projects') as SectionKey[];
   
   // Find where experience or projects was and insert combined section there
   const expIndex = baseOrder.indexOf('experience');
@@ -86,9 +86,9 @@ function getEffectiveSectionOrder(baseOrder: SectionKey[], combined: boolean): s
   );
   
   if (insertIndex !== Infinity) {
-    order.splice(insertIndex, 0, 'experienceProjects');
+    order.splice(insertIndex, 0, 'experienceProjects' as SectionKey);
   } else {
-    order.push('experienceProjects');
+    order.push('experienceProjects' as SectionKey);
   }
   
   return order;
@@ -183,36 +183,6 @@ function App() {
   useEffect(() => { fontProfileRef.current = fontProfile; }, [fontProfile]);
   useEffect(() => { densityPresetRef.current = densityPreset; }, [densityPreset]);
   useEffect(() => { combinedExperienceProjectsRef.current = combinedExperienceProjects; }, [combinedExperienceProjects]);
-
-  // Update section order when combined flag changes
-  useEffect(() => {
-    if (combinedExperienceProjects) {
-      // Replace experience and projects with experienceProjects
-      const newOrder = sectionOrder.filter(s => s !== 'experience' && s !== 'projects');
-      const expIndex = sectionOrder.indexOf('experience');
-      const projIndex = sectionOrder.indexOf('projects');
-      const insertIndex = Math.min(
-        expIndex >= 0 ? expIndex : Infinity,
-        projIndex >= 0 ? projIndex : Infinity
-      );
-      
-      if (insertIndex !== Infinity && !newOrder.includes('experienceProjects')) {
-        newOrder.splice(insertIndex, 0, 'experienceProjects');
-        setSectionOrder(newOrder);
-      }
-    } else {
-      // Replace experienceProjects with experience and projects
-      if (sectionOrder.includes('experienceProjects')) {
-        const newOrder = sectionOrder.filter(s => s !== 'experienceProjects');
-        const expProjIndex = sectionOrder.indexOf('experienceProjects');
-        
-        if (expProjIndex >= 0) {
-          newOrder.splice(expProjIndex, 0, 'experience', 'projects');
-          setSectionOrder(newOrder);
-        }
-      }
-    }
-  }, [combinedExperienceProjects]);
 
   // Handle appearance panel close on outside click or Escape key
   useEffect(() => {
@@ -569,7 +539,9 @@ function App() {
 
   // Section reordering functions
   const moveSectionUp = (section: SectionKey) => {
-    const currentIndex = sectionOrder.indexOf(section);
+    // Map experienceProjects to experience for base order manipulation
+    const baseSection = section === 'experienceProjects' ? 'experience' : section;
+    const currentIndex = sectionOrder.indexOf(baseSection);
     if (currentIndex <= 1) return; // Can't move contact (0) or move above contact
     const newOrder = [...sectionOrder];
     [newOrder[currentIndex - 1], newOrder[currentIndex]] = [newOrder[currentIndex], newOrder[currentIndex - 1]];
@@ -577,7 +549,9 @@ function App() {
   };
 
   const moveSectionDown = (section: SectionKey) => {
-    const currentIndex = sectionOrder.indexOf(section);
+    // Map experienceProjects to experience for base order manipulation
+    const baseSection = section === 'experienceProjects' ? 'experience' : section;
+    const currentIndex = sectionOrder.indexOf(baseSection);
     if (currentIndex === 0 || currentIndex >= sectionOrder.length - 1) return; // Can't move contact or last item
     const newOrder = [...sectionOrder];
     [newOrder[currentIndex], newOrder[currentIndex + 1]] = [newOrder[currentIndex + 1], newOrder[currentIndex]];
@@ -585,12 +559,16 @@ function App() {
   };
 
   const canMoveUp = (section: SectionKey): boolean => {
-    const index = sectionOrder.indexOf(section);
+    // Map experienceProjects to experience for position checking
+    const baseSection = section === 'experienceProjects' ? 'experience' : section;
+    const index = sectionOrder.indexOf(baseSection);
     return index > 1; // Can move if not contact and not second position
   };
 
   const canMoveDown = (section: SectionKey): boolean => {
-    const index = sectionOrder.indexOf(section);
+    // Map experienceProjects to experience for position checking
+    const baseSection = section === 'experienceProjects' ? 'experience' : section;
+    const index = sectionOrder.indexOf(baseSection);
     return index > 0 && index < sectionOrder.length - 1; // Can move if not contact and not last
   };
 
@@ -701,10 +679,11 @@ function App() {
               <div className="progress-connector"></div>
             </div>
             
-            {sectionOrder.map((section, index) => {
+            {getEffectiveSectionOrder(sectionOrder, combinedExperienceProjects).map((section, index) => {
               const Icon = getSectionIcon(section);
               const isComplete = isSectionComplete(section);
-              const isLast = index === sectionOrder.length - 1;
+              const effectiveOrder = getEffectiveSectionOrder(sectionOrder, combinedExperienceProjects);
+              const isLast = index === effectiveOrder.length - 1;
               
               return (
                 <div key={section} className="progress-step-wrapper">
@@ -746,7 +725,7 @@ function App() {
         <main className="form-container">
           {/* Accordion Sections */}
           <div className="accordion-wrapper">
-            {sectionOrder.map((sectionKey) => {
+            {getEffectiveSectionOrder(sectionOrder, combinedExperienceProjects).map((sectionKey) => {
               const getSectionConfig = (key: SectionKey) => {
                 switch (key) {
                   case 'contact':
