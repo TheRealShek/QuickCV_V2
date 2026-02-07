@@ -1,6 +1,7 @@
 {
   "contact": {
     "fullName": "Jane Smith",
+    "jobTitle": "Senior Software Engineer",
     "email": "jane.smith@example.com",
     "phone": "+1 (555) 234-5678",
     "location": "Austin, TX",
@@ -123,5 +124,6 @@
     "skills",
     "projects"
   ],
+  "combinedExperienceProjects": false,
   "fontProfile": "sans"
 }

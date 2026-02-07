@@ -18,6 +18,7 @@ export const VALID_SECTION_KEYS = [
   'education',
   'skills',
   'projects',
+  'experienceProjects',
 ] as const;
 
 export type SectionKey = typeof VALID_SECTION_KEYS[number];
@@ -89,19 +90,31 @@ function transformContactSection(resume: Resume): DocumentElement[] {
   // Name as H1 heading
   elements.push({ type: 'HEADING', level: 1, text: contact.fullName });
   
-  // Single contact line: email → phone → location → links
-  const contactParts: string[] = [];
+  // Job title (if provided) directly under name
+  if (contact.jobTitle) {
+    elements.push({ type: 'TEXT_LINE', text: contact.jobTitle });
+  }
   
-  if (contact.email) contactParts.push(contact.email);
-  if (contact.phone) contactParts.push(contact.phone);
-  if (contact.location) contactParts.push(contact.location);
-  if (contact.linkedin) contactParts.push(contact.linkedin);
-  if (contact.github) contactParts.push(contact.github);
-  if (contact.portfolio) contactParts.push(contact.portfolio);
-  if (contact.twitter) contactParts.push(contact.twitter);
+  // Line 1: email | phone | location
+  const line1Parts: string[] = [];
+  if (contact.email) line1Parts.push(contact.email);
+  if (contact.phone) line1Parts.push(contact.phone);
+  if (contact.location) line1Parts.push(contact.location);
   
-  const contactLine = contactParts.filter(Boolean).join(' • ');
-  elements.push({ type: 'TEXT_LINE', text: contactLine });
+  if (line1Parts.length > 0) {
+    elements.push({ type: 'TEXT_LINE', text: line1Parts.join(' | ') });
+  }
+  
+  // Line 2: linkedin | github | portfolio | twitter
+  const line2Parts: string[] = [];
+  if (contact.linkedin) line2Parts.push(contact.linkedin);
+  if (contact.github) line2Parts.push(contact.github);
+  if (contact.portfolio) line2Parts.push(contact.portfolio);
+  if (contact.twitter) line2Parts.push(contact.twitter);
+  
+  if (line2Parts.length > 0) {
+    elements.push({ type: 'TEXT_LINE', text: line2Parts.join(' | ') });
+  }
   
   return elements;
 }
@@ -391,6 +404,67 @@ function transformProjectsSection(resume: Resume): DocumentElement[] {
 }
 
 /**
+ * Transform combined experience and projects section
+ * User controls the order via form, so we simply show experience first, then projects
+ */
+function transformCombinedExperienceProjectsSection(resume: Resume): DocumentElement[] {
+  const elements: DocumentElement[] = [];
+  
+  elements.push({ type: 'HEADING', level: 2, text: 'Experience & Projects' });
+  
+  // Add experience entries
+  resume.experience.forEach((exp, index) => {
+    elements.push({ type: 'HEADING', level: 3, text: `${exp.role} at ${exp.company}` });
+    
+    const meta: string[] = [];
+    if (exp.location) meta.push(exp.location);
+    
+    const dateRange =
+      exp.endDate && exp.endDate.trim() !== ''
+        ? `${exp.startDate} – ${exp.endDate}`
+        : exp.startDate;
+    meta.push(dateRange);
+    
+    if (meta.length > 0) {
+      elements.push({ type: 'TEXT_LINE', text: meta.join(' • ') });
+    }
+    
+    elements.push({ type: 'LIST', items: exp.description.map(text => ({ text })) });
+    
+    // Add spacing between entries
+    if (index < resume.experience.length - 1 || resume.projects.length > 0) {
+      elements.push({ type: 'TEXT_LINE', text: '' });
+    }
+  });
+  
+  // Add project entries
+  resume.projects.forEach((project, index) => {
+    elements.push({ type: 'HEADING', level: 3, text: project.name });
+    
+    const meta: string[] = [];
+    if (project.techStack && project.techStack.length > 0) {
+      meta.push(project.techStack.join(', '));
+    }
+    if (project.link) {
+      meta.push(project.link);
+    }
+    
+    if (meta.length > 0) {
+      elements.push({ type: 'TEXT_LINE', text: meta.join(' • ') });
+    }
+    
+    elements.push({ type: 'LIST', items: project.description.map(text => ({ text })) });
+    
+    // Add spacing between projects
+    if (index < resume.projects.length - 1) {
+      elements.push({ type: 'TEXT_LINE', text: '' });
+    }
+  });
+  
+  return elements;
+}
+
+/**
  * Transform Resume to Document with custom section ordering
  * 
  * @param resume - Validated resume data
@@ -411,6 +485,7 @@ export function transformResumeToDocumentWithOrder(
     education: () => transformEducationSection(resume),
     skills: () => transformSkillsSection(resume),
     projects: () => transformProjectsSection(resume),
+    experienceProjects: () => transformCombinedExperienceProjectsSection(resume),
   };
   
   // Transform sections in specified order

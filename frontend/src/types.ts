@@ -4,6 +4,7 @@
 
 export interface ContactInfo {
   fullName: string;
+  jobTitle?: string;
   email: string;
   phone: string;
   location: string;
@@ -52,9 +53,10 @@ export interface Resume {
   education: Education[];
   skills: Skills;
   projects: Project[];
+  combinedExperienceProjects?: boolean;
 }
 
-export type SectionKey = 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'projects';
+export type SectionKey = 'contact' | 'summary' | 'experience' | 'education' | 'skills' | 'projects' | 'experienceProjects';
 
 export type FontProfile = 'sans' | 'serif' | 'mono';
 

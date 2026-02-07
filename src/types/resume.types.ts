@@ -16,6 +16,7 @@ export type FontProfile = 'sans' | 'serif' | 'mono';
  */
 export interface ContactInfo {
   fullName: string;
+  jobTitle?: string;
   email: string;
   phone: string;
   location: string;
@@ -84,4 +85,5 @@ export interface Resume {
   education: Education[];
   skills: Skills;
   projects: Project[];
+  combinedExperienceProjects?: boolean;
 }

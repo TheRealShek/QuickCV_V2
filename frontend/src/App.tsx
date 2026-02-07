@@ -68,6 +68,32 @@ function validateResumeStructure(data: any): { isValid: boolean; errors: string[
   return { isValid: errors.length === 0, errors };
 }
 
+// Get effective section order based on combined setting
+function getEffectiveSectionOrder(baseOrder: SectionKey[], combined: boolean): string[] {
+  if (!combined) {
+    return baseOrder;
+  }
+  
+  // Replace 'experience' and 'projects' with 'experienceProjects'
+  const order = baseOrder.filter(s => s !== 'experience' && s !== 'projects');
+  
+  // Find where experience or projects was and insert combined section there
+  const expIndex = baseOrder.indexOf('experience');
+  const projIndex = baseOrder.indexOf('projects');
+  const insertIndex = Math.min(
+    expIndex >= 0 ? expIndex : Infinity,
+    projIndex >= 0 ? projIndex : Infinity
+  );
+  
+  if (insertIndex !== Infinity) {
+    order.splice(insertIndex, 0, 'experienceProjects');
+  } else {
+    order.push('experienceProjects');
+  }
+  
+  return order;
+}
+
 function App() {
   const [contact, setContact] = useState<ContactInfo>(() => 
     loadFromStorage('contact', {
@@ -121,9 +147,13 @@ function App() {
     loadFromStorage('densityPreset', 'normal')
   );
 
+  const [combinedExperienceProjects, setCombinedExperienceProjects] = useState<boolean>(() =>
+    loadFromStorage('combinedExperienceProjects', false)
+  );
+
   const [expandedAccordion, setExpandedAccordion] = useState<SectionKey | null>('contact');
   const [isAppearanceOpen, setIsAppearanceOpen] = useState(false);
-  const [appearanceTab, setAppearanceTab] = useState<'font' | 'density'>('font');
+  const [appearanceTab, setAppearanceTab] = useState<'font' | 'density' | 'layout'>('font');
 
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving'>('idle');
   const [lastSaveTime, setLastSaveTime] = useState<number | null>(null);
@@ -140,6 +170,7 @@ function App() {
   const sectionOrderRef = useRef(sectionOrder);
   const fontProfileRef = useRef(fontProfile);
   const densityPresetRef = useRef(densityPreset);
+  const combinedExperienceProjectsRef = useRef(combinedExperienceProjects);
 
   // Keep refs in sync with state
   useEffect(() => { contactRef.current = contact; }, [contact]);
@@ -151,6 +182,7 @@ function App() {
   useEffect(() => { sectionOrderRef.current = sectionOrder; }, [sectionOrder]);
   useEffect(() => { fontProfileRef.current = fontProfile; }, [fontProfile]);
   useEffect(() => { densityPresetRef.current = densityPreset; }, [densityPreset]);
+  useEffect(() => { combinedExperienceProjectsRef.current = combinedExperienceProjects; }, [combinedExperienceProjects]);
 
   // Handle appearance panel close on outside click or Escape key
   useEffect(() => {
@@ -251,6 +283,7 @@ function App() {
           sectionOrder: sectionOrderRef.current,
           fontProfile: fontProfileRef.current,
           densityPreset: densityPresetRef.current,
+          combinedExperienceProjects: combinedExperienceProjectsRef.current,
         };
         const dataString = JSON.stringify(data);
 
@@ -299,11 +332,14 @@ function App() {
         education,
         skills,
         projects,
+        combinedExperienceProjects,
       };
+
+      const effectiveOrder = getEffectiveSectionOrder(sectionOrder, combinedExperienceProjects);
 
       const requestData = {
         resume,
-        sectionOrder,
+        sectionOrder: effectiveOrder,
         fontProfile,
         densityPreset,
       };
@@ -352,7 +388,7 @@ function App() {
     };
 
     generateLivePreview();
-  }, [contact, summary, experience, education, skills, projects, sectionOrder, fontProfile, densityPreset]);
+  }, [contact, summary, experience, education, skills, projects, sectionOrder, fontProfile, densityPreset, combinedExperienceProjects]);
 
   const handleGeneratePDF = async () => {
     // Build resume JSON (matching v1 schema)
@@ -363,7 +399,10 @@ function App() {
       education,
       skills,
       projects,
+      combinedExperienceProjects,
     };
+
+    const effectiveOrder = getEffectiveSectionOrder(sectionOrder, combinedExperienceProjects);
 
     try {
       const response = await fetch(`${API_URL}/generate-pdf`, {
@@ -373,7 +412,7 @@ function App() {
         },
         body: JSON.stringify({
           resume,
-          sectionOrder,
+          sectionOrder: effectiveOrder,
           fontProfile,
           densityPreset,
         }),
@@ -540,6 +579,8 @@ function App() {
         return skills.skills.length > 0;
       case 'projects':
         return projects.length > 0;
+      case 'experienceProjects':
+        return experience.length > 0 || projects.length > 0;
       default:
         return false;
     }
@@ -553,6 +594,7 @@ function App() {
       case 'education': return GraduationCap;
       case 'skills': return Wrench;
       case 'projects': return FolderKanban;
+      case 'experienceProjects': return Briefcase;
     }
   };
 
@@ -564,6 +606,7 @@ function App() {
       case 'education': return 'Education';
       case 'skills': return 'Skills';
       case 'projects': return 'Projects';
+      case 'experienceProjects': return 'Experience & Projects';
     }
   };
 
@@ -723,6 +766,19 @@ function App() {
                       content: <ProjectsForm data={projects} onChange={setProjects} />,
                       isEmpty: projects.length === 0,
                       emptyMessage: 'No projects added yet'
+                    };
+                  case 'experienceProjects':
+                    return {
+                      icon: Briefcase,
+                      title: 'Experience & Projects',
+                      content: (
+                        <>
+                          <ExperienceForm data={experience} onChange={setExperience} />
+                          <ProjectsForm data={projects} onChange={setProjects} />
+                        </>
+                      ),
+                      isEmpty: experience.length === 0 && projects.length === 0,
+                      emptyMessage: 'No entries yet'
                     };
                 }
               };
@@ -896,6 +952,12 @@ function App() {
             >
               Layout Density
             </button>
+            <button
+              className={`appearance-tab ${appearanceTab === 'layout' ? 'active' : ''}`}
+              onClick={() => setAppearanceTab('layout')}
+            >
+              Sections
+            </button>
           </div>
 
           <div className="appearance-content">
@@ -971,6 +1033,25 @@ function App() {
                   />
                   <span>Ultra-Compact</span>
                   <span className="help-text-inline">Maximum density</span>
+                </label>
+              </div>
+            )}
+
+            {appearanceTab === 'layout' && (
+              <div className="checkbox-group">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={combinedExperienceProjects}
+                    onChange={(e) => setCombinedExperienceProjects(e.target.checked)}
+                  />
+                  <div>
+                    <span>Combine Experience & Projects</span>
+                    <p className="help-text-block">
+                      Merge work experience and projects into a single "Experience & Projects" section.
+                      You can reorder individual entries in each form.
+                    </p>
+                  </div>
                 </label>
               </div>
             )}

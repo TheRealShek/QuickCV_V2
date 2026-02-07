@@ -29,6 +29,20 @@ export function ContactForm({ data, onChange }: ContactFormProps) {
       </div>
 
       <div className="form-group">
+        <label htmlFor="jobTitle">
+          Job Title
+        </label>
+        <input
+          id="jobTitle"
+          type="text"
+          value={data.jobTitle || ''}
+          onChange={(e) => handleChange('jobTitle', e.target.value)}
+          placeholder="Backend Developer"
+        />
+        <p className="help-text">Appears directly under your name (e.g., "Backend Developer", "Software Engineer")</p>
+      </div>
+
+      <div className="form-group">
         <label htmlFor="email">
           Email <span className="required">*</span>
         </label>
