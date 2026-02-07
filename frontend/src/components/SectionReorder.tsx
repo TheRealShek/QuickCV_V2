@@ -12,6 +12,7 @@ const SECTION_LABELS: Record<SectionKey, string> = {
   education: 'Education',
   skills: 'Skills',
   projects: 'Projects',
+  experienceProjects: 'Experience & Projects',
 };
 
 export function SectionReorder({ sectionOrder, onChange }: SectionReorderProps) {

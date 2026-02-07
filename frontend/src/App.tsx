@@ -69,13 +69,13 @@ function validateResumeStructure(data: any): { isValid: boolean; errors: string[
 }
 
 // Get effective section order based on combined setting
-function getEffectiveSectionOrder(baseOrder: SectionKey[], combined: boolean): SectionKey[] {
+function getEffectiveSectionOrder(baseOrder: SectionKey[], combined: boolean): string[] {
   if (!combined) {
     return baseOrder;
   }
   
   // Replace 'experience' and 'projects' with 'experienceProjects'
-  const order = baseOrder.filter(s => s !== 'experience' && s !== 'projects') as SectionKey[];
+  const order = baseOrder.filter(s => s !== 'experience' && s !== 'projects');
   
   // Find where experience or projects was and insert combined section there
   const expIndex = baseOrder.indexOf('experience');
@@ -86,9 +86,9 @@ function getEffectiveSectionOrder(baseOrder: SectionKey[], combined: boolean): S
   );
   
   if (insertIndex !== Infinity) {
-    order.splice(insertIndex, 0, 'experienceProjects' as SectionKey);
+    order.splice(insertIndex, 0, 'experienceProjects');
   } else {
-    order.push('experienceProjects' as SectionKey);
+    order.push('experienceProjects');
   }
   
   return order;
@@ -128,16 +128,22 @@ function App() {
     loadFromStorage('projects', [])
   );
 
-  const [sectionOrder, setSectionOrder] = useState<SectionKey[]>(() =>
-    loadFromStorage('sectionOrder', [
+  const [sectionOrder, setSectionOrder] = useState<SectionKey[]>(() => {
+    const loadedOrder = loadFromStorage('sectionOrder', [
       'contact',
       'summary',
       'experience',
       'education',
       'skills',
       'projects',
-    ])
-  );
+    ] as SectionKey[]);
+    // Ensure sectionOrder never contains 'experienceProjects'
+    // Filter it out if present, and ensure experience/projects are present
+    const sanitized = loadedOrder.filter(s => s !== 'experienceProjects') as SectionKey[];
+    if (!sanitized.includes('experience')) sanitized.push('experience');
+    if (!sanitized.includes('projects')) sanitized.push('projects');
+    return sanitized;
+  });
 
   const [fontProfile, setFontProfile] = useState<FontProfile>(() =>
     loadFromStorage('fontProfile', 'sans')
@@ -460,6 +466,7 @@ function App() {
       skills,
       projects,
       sectionOrder,
+      combinedExperienceProjects,
     };
 
     // Convert to JSON string
@@ -523,7 +530,19 @@ function App() {
 
       // Load section order if present, otherwise use default
       if (data.sectionOrder && Array.isArray(data.sectionOrder)) {
-        setSectionOrder(data.sectionOrder);
+        // Ensure sectionOrder only contains base sections (no experienceProjects)
+        const baseOrder = data.sectionOrder.filter((s: string) => s !== 'experienceProjects');
+        // If experienceProjects was in order but experience/projects are missing, add them
+        if (data.sectionOrder.includes('experienceProjects')) {
+          if (!baseOrder.includes('experience')) baseOrder.push('experience');
+          if (!baseOrder.includes('projects')) baseOrder.push('projects');
+        }
+        setSectionOrder(baseOrder);
+      }
+
+      // Load combinedExperienceProjects flag if present
+      if (typeof data.combinedExperienceProjects === 'boolean') {
+        setCombinedExperienceProjects(data.combinedExperienceProjects);
       }
 
       alert('Resume loaded successfully!');
@@ -539,9 +558,7 @@ function App() {
 
   // Section reordering functions
   const moveSectionUp = (section: SectionKey) => {
-    // Map experienceProjects to experience for base order manipulation
-    const baseSection = section === 'experienceProjects' ? 'experience' : section;
-    const currentIndex = sectionOrder.indexOf(baseSection);
+    const currentIndex = sectionOrder.indexOf(section);
     if (currentIndex <= 1) return; // Can't move contact (0) or move above contact
     const newOrder = [...sectionOrder];
     [newOrder[currentIndex - 1], newOrder[currentIndex]] = [newOrder[currentIndex], newOrder[currentIndex - 1]];
@@ -549,9 +566,7 @@ function App() {
   };
 
   const moveSectionDown = (section: SectionKey) => {
-    // Map experienceProjects to experience for base order manipulation
-    const baseSection = section === 'experienceProjects' ? 'experience' : section;
-    const currentIndex = sectionOrder.indexOf(baseSection);
+    const currentIndex = sectionOrder.indexOf(section);
     if (currentIndex === 0 || currentIndex >= sectionOrder.length - 1) return; // Can't move contact or last item
     const newOrder = [...sectionOrder];
     [newOrder[currentIndex], newOrder[currentIndex + 1]] = [newOrder[currentIndex + 1], newOrder[currentIndex]];
@@ -559,16 +574,12 @@ function App() {
   };
 
   const canMoveUp = (section: SectionKey): boolean => {
-    // Map experienceProjects to experience for position checking
-    const baseSection = section === 'experienceProjects' ? 'experience' : section;
-    const index = sectionOrder.indexOf(baseSection);
+    const index = sectionOrder.indexOf(section);
     return index > 1; // Can move if not contact and not second position
   };
 
   const canMoveDown = (section: SectionKey): boolean => {
-    // Map experienceProjects to experience for position checking
-    const baseSection = section === 'experienceProjects' ? 'experience' : section;
-    const index = sectionOrder.indexOf(baseSection);
+    const index = sectionOrder.indexOf(section);
     return index > 0 && index < sectionOrder.length - 1; // Can move if not contact and not last
   };
 
@@ -680,32 +691,33 @@ function App() {
             </div>
             
             {getEffectiveSectionOrder(sectionOrder, combinedExperienceProjects).map((section, index) => {
-              const Icon = getSectionIcon(section);
-              const isComplete = isSectionComplete(section);
+              const sectionKey = section as SectionKey;
+              const Icon = getSectionIcon(sectionKey);
+              const isComplete = isSectionComplete(sectionKey);
               const effectiveOrder = getEffectiveSectionOrder(sectionOrder, combinedExperienceProjects);
               const isLast = index === effectiveOrder.length - 1;
               
               return (
                 <div key={section} className="progress-step-wrapper">
                   <div 
-                    className={`progress-step ${isComplete ? 'complete' : 'incomplete'} ${expandedAccordion === section ? 'active' : ''}`}
-                    title={getSectionLabel(section)}
-                    onClick={() => setExpandedAccordion(section)}
+                    className={`progress-step ${isComplete ? 'complete' : 'incomplete'} ${expandedAccordion === sectionKey ? 'active' : ''}`}
+                    title={getSectionLabel(sectionKey)}
+                    onClick={() => setExpandedAccordion(sectionKey)}
                     role="button"
                     tabIndex={0}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
-                        setExpandedAccordion(section);
+                        setExpandedAccordion(sectionKey);
                       }
                     }}
-                    aria-label={`Open ${getSectionLabel(section)} section`}
+                    aria-label={`Open ${getSectionLabel(sectionKey)} section`}
                   >
                     <div className="progress-step-icon">
                       <Icon size={16} />
                     </div>
                     <div className="progress-step-label">
-                      {getSectionLabel(section)}
+                      {getSectionLabel(sectionKey)}
                     </div>
                     <div className="progress-step-status">
                       {isComplete ? (
@@ -726,6 +738,7 @@ function App() {
           {/* Accordion Sections */}
           <div className="accordion-wrapper">
             {getEffectiveSectionOrder(sectionOrder, combinedExperienceProjects).map((sectionKey) => {
+              const key = sectionKey as SectionKey;
               const getSectionConfig = (key: SectionKey) => {
                 switch (key) {
                   case 'contact':
@@ -792,19 +805,19 @@ function App() {
                 }
               };
 
-              const config = getSectionConfig(sectionKey);
+              const config = getSectionConfig(key);
               const Icon = config.icon;
-              const isExpanded = expandedAccordion === sectionKey;
+              const isExpanded = expandedAccordion === key;
 
               return (
-                <div key={sectionKey} className="accordion-card">
+                <div key={key} className="accordion-card">
                   <div 
                     className="accordion-header"
-                    onClick={() => setExpandedAccordion(isExpanded ? null : sectionKey)}
+                    onClick={() => setExpandedAccordion(isExpanded ? null : key)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
-                        setExpandedAccordion(isExpanded ? null : sectionKey);
+                        setExpandedAccordion(isExpanded ? null : key);
                       }
                     }}
                     role="button"
@@ -823,11 +836,11 @@ function App() {
                         className="accordion-reorder-btn"
                         onClick={(e) => {
                           e.stopPropagation();
-                          moveSectionUp(sectionKey);
+                          if (key !== 'experienceProjects') moveSectionUp(key);
                         }}
-                        disabled={!canMoveUp(sectionKey)}
+                        disabled={key === 'experienceProjects' || !canMoveUp(key)}
                         aria-label="Move section up"
-                        title="Move up"
+                        title={key === 'experienceProjects' ? 'Cannot reorder combined section' : 'Move up'}
                       >
                         <ChevronUp size={16} />
                       </button>
@@ -835,11 +848,11 @@ function App() {
                         className="accordion-reorder-btn"
                         onClick={(e) => {
                           e.stopPropagation();
-                          moveSectionDown(sectionKey);
+                          if (key !== 'experienceProjects') moveSectionDown(key);
                         }}
-                        disabled={!canMoveDown(sectionKey)}
+                        disabled={key === 'experienceProjects' || !canMoveDown(key)}
                         aria-label="Move section down"
-                        title="Move down"
+                        title={key === 'experienceProjects' ? 'Cannot reorder combined section' : 'Move down'}
                       >
                         <ChevronDown size={16} />
                       </button>
