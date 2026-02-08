@@ -70,8 +70,15 @@ export function validateSectionOrder(sectionOrder?: string[]): SectionKey[] {
   // Add remaining ordered keys
   finalOrder.push(...orderedKeys);
   
-  // Add any missing sections at the end (in default order)
+  // Only add missing sections if experienceProjects is NOT in the order
+  // If experienceProjects is present, experience and projects should not be added
+  const hasExperienceProjects = finalOrder.includes('experienceProjects');
+  
   for (const key of DEFAULT_SECTION_ORDER) {
+    // Skip experience and projects if experienceProjects is present
+    if (hasExperienceProjects && (key === 'experience' || key === 'projects')) {
+      continue;
+    }
     if (!finalOrder.includes(key)) {
       finalOrder.push(key);
     }
