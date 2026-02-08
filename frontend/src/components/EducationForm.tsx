@@ -15,6 +15,8 @@ export function EducationForm({ data, onChange }: EducationFormProps) {
         fieldOfStudy: '',
         startDate: '',
         endDate: '',
+        cgpa: '',
+        relevantCourseWorks: [],
       },
     ]);
   };
@@ -23,10 +25,15 @@ export function EducationForm({ data, onChange }: EducationFormProps) {
     onChange(data.filter((_, i) => i !== index));
   };
 
-  const updateEducation = (index: number, field: keyof Education, value: string) => {
+  const updateEducation = (index: number, field: keyof Education, value: string | string[]) => {
     const updated = [...data];
     updated[index] = { ...updated[index], [field]: value };
     onChange(updated);
+  };
+
+  const updateCourseWorks = (index: number, value: string) => {
+    const courses = value.split(',').map(c => c.trim()).filter(c => c.length > 0);
+    updateEducation(index, 'relevantCourseWorks', courses);
   };
 
   return (
@@ -115,6 +122,29 @@ export function EducationForm({ data, onChange }: EducationFormProps) {
                 placeholder="MM/YYYY or 'Expected MM/YYYY'"
               />
             </div>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor={`cgpa-${index}`}>CGPA / GPA</label>
+            <input
+              id={`cgpa-${index}`}
+              type="text"
+              value={edu.cgpa || ''}
+              onChange={(e) => updateEducation(index, 'cgpa', e.target.value)}
+              placeholder="e.g., 3.8/4.0 or 8.5/10"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor={`courseWorks-${index}`}>Relevant Courseworks</label>
+            <input
+              id={`courseWorks-${index}`}
+              type="text"
+              value={edu.relevantCourseWorks?.join(', ') || ''}
+              onChange={(e) => updateCourseWorks(index, e.target.value)}
+              placeholder="Enter comma-separated courses, e.g., Data Structures, Algorithms, Machine Learning"
+            />
+            <span className="help-text">Separate courses with commas</span>
           </div>
         </div>
       ))}

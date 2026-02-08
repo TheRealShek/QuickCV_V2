@@ -33,6 +33,8 @@ export interface Education {
   fieldOfStudy?: string;
   startDate: string;
   endDate?: string;
+  cgpa?: string;
+  relevantCourseWorks?: string[];
 }
 
 export interface Skills {

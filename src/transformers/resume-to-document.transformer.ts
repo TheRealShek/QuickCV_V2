@@ -184,8 +184,20 @@ function transformEducationSection(resume: Resume): DocumentElement[] {
     elements.push({ type: 'HEADING', level: 3, text: degreeText });
     elements.push({ type: 'TEXT_LINE', text: edu.institution });
     
+    const meta: string[] = [];
     const dateLine = edu.endDate ? `${edu.startDate} - ${edu.endDate}` : `${edu.startDate} - Present`;
-    elements.push({ type: 'TEXT_LINE', text: dateLine });
+    meta.push(dateLine);
+    
+    if (edu.cgpa) {
+      meta.push(`CGPA: ${edu.cgpa}`);
+    }
+    
+    elements.push({ type: 'TEXT_LINE', text: meta.join(' • ') });
+    
+    // Add relevant courseworks if provided
+    if (edu.relevantCourseWorks && edu.relevantCourseWorks.length > 0) {
+      elements.push({ type: 'TEXT_LINE', text: `Relevant Courseworks: ${edu.relevantCourseWorks.join(', ')}` });
+    }
     
     if (index < resume.education.length - 1) {
       elements.push({ type: 'TEXT_LINE', text: '' });

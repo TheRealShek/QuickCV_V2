@@ -251,6 +251,37 @@ export function validateEducation(
   
   validateOptionalString(edu.fieldOfStudy, `${prefix}.fieldOfStudy`, limits.maxStringLength, errors);
   validateOptionalString(edu.endDate, `${prefix}.endDate`, limits.maxStringLength, errors);
+  validateOptionalString(edu.cgpa, `${prefix}.cgpa`, limits.maxStringLength, errors);
+  
+  // Validate relevantCourseWorks as optional string array
+  if (edu.relevantCourseWorks !== undefined) {
+    if (!Array.isArray(edu.relevantCourseWorks)) {
+      errors.push({
+        type: 'INVALID_TYPE',
+        field: `${prefix}.relevantCourseWorks`,
+        message: 'Relevant courseworks must be an array',
+        value: edu.relevantCourseWorks,
+      });
+    } else {
+      edu.relevantCourseWorks.forEach((course, i) => {
+        if (typeof course !== 'string') {
+          errors.push({
+            type: 'INVALID_TYPE',
+            field: `${prefix}.relevantCourseWorks[${i}]`,
+            message: 'Each coursework must be a string',
+            value: course,
+          });
+        } else if (course.length > limits.maxStringLength) {
+          errors.push({
+            type: 'STRING_TOO_LONG',
+            field: `${prefix}.relevantCourseWorks[${i}]`,
+            message: `Coursework exceeds maximum length of ${limits.maxStringLength}`,
+            value: course,
+          });
+        }
+      });
+    }
+  }
   
   return { isValid: errors.length === 0, errors };
 }

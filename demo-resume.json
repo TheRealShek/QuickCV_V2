@@ -59,7 +59,16 @@
       "degree": "Bachelor of Science",
       "fieldOfStudy": "Computer Science",
       "startDate": "2013-09",
-      "endDate": "2017-05"
+      "endDate": "2017-05",
+      "cgpa": "3.8/4.0",
+      "relevantCourseWorks": [
+        "Data Structures",
+        "Algorithms",
+        "Database Systems",
+        "Operating Systems",
+        "Software Engineering",
+        "Machine Learning"
+      ]
     }
   ],
   "skills": {
