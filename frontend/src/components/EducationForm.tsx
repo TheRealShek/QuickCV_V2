@@ -16,7 +16,7 @@ export function EducationForm({ data, onChange }: EducationFormProps) {
         startDate: '',
         endDate: '',
         cgpa: '',
-        relevantCourseWorks: [],
+        relevantCourseWork: [],
       },
     ]);
   };
@@ -31,9 +31,9 @@ export function EducationForm({ data, onChange }: EducationFormProps) {
     onChange(updated);
   };
 
-  const updateCourseWorks = (index: number, value: string) => {
+  const updateCourseWork = (index: number, value: string) => {
     const courses = value.split(',').map(c => c.trim()).filter(c => c.length > 0);
-    updateEducation(index, 'relevantCourseWorks', courses);
+    updateEducation(index, 'relevantCourseWork', courses);
   };
 
   return (
@@ -136,12 +136,12 @@ export function EducationForm({ data, onChange }: EducationFormProps) {
           </div>
 
           <div className="form-group">
-            <label htmlFor={`courseWorks-${index}`}>Relevant Courseworks</label>
+            <label htmlFor={`courseWork-${index}`}>Relevant Coursework</label>
             <input
-              id={`courseWorks-${index}`}
+              id={`courseWork-${index}`}
               type="text"
-              value={edu.relevantCourseWorks?.join(', ') || ''}
-              onChange={(e) => updateCourseWorks(index, e.target.value)}
+              value={edu.relevantCourseWork?.join(', ') || ''}
+              onChange={(e) => updateCourseWork(index, e.target.value)}
               placeholder="Enter comma-separated courses, e.g., Data Structures, Algorithms, Machine Learning"
             />
             <span className="help-text">Separate courses with commas</span>

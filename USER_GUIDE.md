@@ -61,12 +61,14 @@ I need six sections from you. Here's what each one looks like:
 {
   "contact": {
     "fullName": "Jane Doe",
+    "jobTitle": "Senior Software Engineer",  // optional - displays under name
     "email": "jane@example.com",
     "phone": "+1-555-0123",
     "location": "San Francisco, CA",
     "linkedin": "linkedin.com/in/janedoe",  // optional
     "github": "github.com/janedoe",         // optional
-    "portfolio": "janedoe.com"              // optional
+    "portfolio": "janedoe.com",             // optional
+    "twitter": "@janedoe"                   // optional
   }
 }
 ```
@@ -114,7 +116,13 @@ I need six sections from you. Here's what each one looks like:
       "degree": "Bachelor of Science",
       "fieldOfStudy": "Computer Science",     // optional
       "startDate": "2015",
-      "endDate": "2019"                       // optional
+      "endDate": "2019",                       // optional
+      "cgpa": "3.8/4.0",                       // optional - displayed in date line
+      "relevantCourseWork": [                  // optional - displayed as comma-separated list
+        "Data Structures",
+        "Algorithms",
+        "Operating Systems"
+      ]
     }
   ]
 }
@@ -130,9 +138,11 @@ I need six sections from you. Here's what each one looks like:
 }
 ```
 
-**I auto-categorize these for you.** I'll group React under "Frontend", PostgreSQL under "Database", AWS under "Cloud & DevOps", etc. If I don't recognize something, it goes to "Other".
+**I auto-categorize these for you.** I'll group React under "Frontend", PostgreSQL under "Database", AWS under "Cloud", Docker under "Cloud", Jenkins under "DevOps", etc. If I don't recognize something, it goes to "Other".
 
-**Want control?** Prefix with category: `"Frontend: Elm"`. I'll strip the prefix in the PDF output.
+**Want control?** Prefix with category: `"Frontend: Elm"`, `"Cloud: AWS"`, `"DevOps: Jenkins"`. I'll strip the prefix in the PDF output.
+
+**Available categories:** Frontend, Backend, Mobile, Database, Cloud, DevOps, API, Testing, Security, Data, AI & ML, Tools, Operating Systems, Networking, Architecture, CMS, Game Development, Other.
 
 ### Projects
 
@@ -175,6 +185,73 @@ const pdfBuffer = await generatePDFFromResume(resumeData);
 - Contact is always first (I enforce this)
 - Any missing sections get added at the end in default order
 - Invalid section names are ignored
+- Valid section keys: `'contact'`, `'summary'`, `'experience'`, `'education'`, `'skills'`, `'projects'`, `'experienceProjects'`
+
+## Combined Experience & Projects
+
+Want to merge Experience and Projects into a single "Experience & Projects" section?
+
+```json
+{
+  "combinedExperienceProjects": true,
+  "sectionOrder": ["contact", "summary", "skills", "education"]
+}
+```
+
+When enabled:
+- Both `'experience'` and `'projects'` are combined into one section
+- Use section key `'experienceProjects'` in `sectionOrder` if you want to position it
+- Experience entries appear first, followed by projects
+- If you have empty experience array, only projects will show
+
+## Font & Layout Options
+
+**Font Profile** (optional):
+```json
+{
+  "fontProfile": "sans"  // "sans" (default), "serif", or "mono"
+}
+```
+- `"sans"` - Modern, clean (Helvetica)
+- `"serif"` - Traditional, formal (Times)
+- `"mono"` - Technical, precise (Courier)
+
+**Density Preset** (optional):
+```json
+{
+  "densityPreset": "normal"  // "normal" (default), "compact", or "ultra-compact"
+}
+```
+- `"normal"` - Comfortable spacing
+- `"compact"` - Tighter spacing, fits more content
+- `"ultra-compact"` - Maximum density, minimal spacing
+
+## Custom Section Order
+
+By default, I render sections in this order: Contact → Summary → Experience → Education → Skills → Projects.
+
+By default, I render sections in this order: Contact → Summary → Experience → Education → Skills → Projects.
+
+Want a different order? Pass it as the second argument:
+
+```typescript
+import { transformResumeToDocumentWithOrder, generatePDFFromResume } from './src/index';
+
+const customOrder = ['contact', 'skills', 'experience', 'projects', 'education', 'summary'];
+
+// Option 1: Transform with order, then render
+const document = transformResumeToDocumentWithOrder(resumeData, customOrder);
+const pdfBuffer = await generatePDFFromDocument(document);
+
+// Option 2: Direct generation (uses default order)
+const pdfBuffer = await generatePDFFromResume(resumeData);
+```
+
+**Rules:**
+- Contact is always first (I enforce this)
+- Any missing sections get added at the end in default order
+- Invalid section names are ignored
+- Valid section keys: `'contact'`, `'summary'`, `'experience'`, `'education'`, `'skills'`, `'projects'`, `'experienceProjects'`
 
 ## What I Validate
 
@@ -219,10 +296,11 @@ If you need these, QuickCV isn't the right tool.
 Here's what you get:
 
 - **Format:** US Letter (8.5" × 11"), 0.75" margins
-- **Font:** Helvetica family (sans-serif)
+- **Font:** Three profiles available - Sans (Helvetica), Serif (Times), Mono (Courier)
 - **Layout:** Single column, top-to-bottom
 - **Text:** Fully selectable and searchable
 - **ATS-safe:** No parsing tricks, no complex structures
+- **Density:** Adjustable spacing from normal to ultra-compact
 
 ## Tips
 

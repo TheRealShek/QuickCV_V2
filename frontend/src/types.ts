@@ -34,7 +34,7 @@ export interface Education {
   startDate: string;
   endDate?: string;
   cgpa?: string;
-  relevantCourseWorks?: string[];
+  relevantCourseWork?: string[];
 }
 
 export interface Skills {

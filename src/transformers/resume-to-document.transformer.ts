@@ -194,9 +194,9 @@ function transformEducationSection(resume: Resume): DocumentElement[] {
     
     elements.push({ type: 'TEXT_LINE', text: meta.join(' • ') });
     
-    // Add relevant courseworks if provided
-    if (edu.relevantCourseWorks && edu.relevantCourseWorks.length > 0) {
-      elements.push({ type: 'TEXT_LINE', text: `Relevant Courseworks: ${edu.relevantCourseWorks.join(', ')}` });
+    // Add relevant coursework if provided
+    if (edu.relevantCourseWork && edu.relevantCourseWork.length > 0) {
+      elements.push({ type: 'TEXT_LINE', text: `Relevant Coursework: ${edu.relevantCourseWork.join(', ')}` });
     }
     
     if (index < resume.education.length - 1) {
@@ -230,11 +230,14 @@ const SKILL_CATEGORIES = {
     'mongodb', 'dynamodb', 'redis', 'elasticsearch',
     'sql', 'nosql', 'prisma', 'typeorm', 'sequelize', 'mongoose'
   ],
-  'Cloud & DevOps': [
+  'Cloud': [
     'aws', 'azure', 'gcp', 'google cloud',
     'docker', 'kubernetes', 'k8s',
-    'terraform', 'ansible', 'jenkins', 'github actions', 'gitlab ci',
-    'ci/cd', 'serverless', 'lambda', 'cloudformation'
+    'terraform', 'serverless', 'lambda', 'cloudformation'
+  ],
+  'DevOps': [
+    'jenkins', 'github actions', 'gitlab ci', 'circleci',
+    'ci/cd', 'ansible', 'argocd', 'prometheus', 'grafana'
   ],
   'Tools': [
     'git', 'github', 'gitlab', 'bitbucket',
@@ -252,11 +255,10 @@ const CATEGORY_ALIASES: Record<string, string> = {
   'frontend': 'Frontend',
   'backend': 'Backend',
   'database': 'Database',
-  'cloud': 'Cloud & DevOps',
-  'clouddevops': 'Cloud & DevOps',
-  'cloud & devops': 'Cloud & DevOps',
-  'cloud&devops': 'Cloud & DevOps',
-  'devops': 'Cloud & DevOps',
+  'cloud': 'Cloud',
+  'devops': 'DevOps',
+  'ci/cd': 'DevOps',
+  'cicd': 'DevOps',
   'mobile': 'Mobile',
   'ios': 'Mobile',
   'android': 'Mobile',
@@ -361,7 +363,8 @@ function transformSkillsSection(resume: Resume): DocumentElement[] {
     'Backend',
     'Mobile',
     'Database',
-    'Cloud & DevOps',
+    'Cloud',
+    'DevOps',
     'API',
     'Testing',
     'Security',
