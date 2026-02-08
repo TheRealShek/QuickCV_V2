@@ -74,25 +74,38 @@ function getEffectiveSectionOrder(baseOrder: SectionKey[], combined: boolean): s
     return baseOrder;
   }
   
-  // Replace 'experience' and 'projects' with 'experienceProjects'
-  // Also filter out any existing 'experienceProjects' to prevent duplicates
-  const order = baseOrder.filter(s => s !== 'experience' && s !== 'projects' && s !== 'experienceProjects') as string[];
-  
-  // Find where experience or projects was and insert combined section there
+  // Find where experience or projects appears first in the order
   const expIndex = baseOrder.indexOf('experience');
   const projIndex = baseOrder.indexOf('projects');
-  const insertIndex = Math.min(
-    expIndex >= 0 ? expIndex : Infinity,
-    projIndex >= 0 ? projIndex : Infinity
-  );
   
-  if (insertIndex !== Infinity) {
-    order.splice(insertIndex, 0, 'experienceProjects');
+  // Determine insertion position (use whichever comes first)
+  let insertPosition: number;
+  if (expIndex >= 0 && projIndex >= 0) {
+    insertPosition = Math.min(expIndex, projIndex);
+  } else if (expIndex >= 0) {
+    insertPosition = expIndex;
+  } else if (projIndex >= 0) {
+    insertPosition = projIndex;
   } else {
-    order.push('experienceProjects');
+    // Neither exists, add at the end
+    return [...baseOrder.filter(s => s !== 'experienceProjects'), 'experienceProjects'];
   }
   
-  return order;
+  // Build new order: keep everything except experience, projects, and experienceProjects
+  const result: string[] = [];
+  for (let i = 0; i < baseOrder.length; i++) {
+    const section = baseOrder[i];
+    if (section === 'experience' || section === 'projects' || section === 'experienceProjects') {
+      // Skip these, but if this is the first occurrence position, insert combined section
+      if (i === insertPosition) {
+        result.push('experienceProjects');
+      }
+    } else {
+      result.push(section);
+    }
+  }
+  
+  return result;
 }
 
 function App() {
