@@ -70,18 +70,13 @@ function validateResumeStructure(data: any): { isValid: boolean; errors: string[
 
 // Get effective section order based on combined setting
 function getEffectiveSectionOrder(baseOrder: SectionKey[], combined: boolean): string[] {
-  console.log('[getEffectiveSectionOrder] Input:', { baseOrder, combined });
-  
   if (!combined) {
-    console.log('[getEffectiveSectionOrder] Not combined, returning baseOrder');
     return baseOrder;
   }
   
   // Find where experience or projects appears first in the order
   const expIndex = baseOrder.indexOf('experience');
   const projIndex = baseOrder.indexOf('projects');
-  
-  console.log('[getEffectiveSectionOrder] Indices:', { expIndex, projIndex });
   
   // Determine insertion position (use whichever comes first)
   let insertPosition: number;
@@ -93,12 +88,8 @@ function getEffectiveSectionOrder(baseOrder: SectionKey[], combined: boolean): s
     insertPosition = projIndex;
   } else {
     // Neither exists, add at the end
-    const result = [...baseOrder.filter(s => s !== 'experienceProjects'), 'experienceProjects'];
-    console.log('[getEffectiveSectionOrder] No experience/projects found, result:', result);
-    return result;
+    return [...baseOrder.filter(s => s !== 'experienceProjects'), 'experienceProjects'];
   }
-  
-  console.log('[getEffectiveSectionOrder] Insert position:', insertPosition);
   
   // Build new order: keep everything except experience, projects, and experienceProjects
   const result: string[] = [];
@@ -114,7 +105,6 @@ function getEffectiveSectionOrder(baseOrder: SectionKey[], combined: boolean): s
     }
   }
   
-  console.log('[getEffectiveSectionOrder] Final result:', result);
   return result;
 }
 
