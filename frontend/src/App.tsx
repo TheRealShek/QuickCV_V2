@@ -1,14 +1,14 @@
-import { useState, useEffect, useRef } from 'react';
-import { CircleEllipsis, User, FileText, Briefcase, GraduationCap, Wrench, FolderKanban, ChevronDown, X, ChevronUp, Check, Pencil } from 'lucide-react';
+import { Briefcase, Check, ChevronDown, ChevronUp, CircleEllipsis, FileText, FolderKanban, GraduationCap, Pencil, User, Wrench, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import './App.css';
 import logoImage from './assets/file.png';
 import { ContactForm } from './components/ContactForm';
-import { SummaryForm } from './components/SummaryForm';
-import { ExperienceForm } from './components/ExperienceForm';
 import { EducationForm } from './components/EducationForm';
-import { SkillsForm } from './components/SkillsForm';
+import { ExperienceForm } from './components/ExperienceForm';
 import { ProjectsForm } from './components/ProjectsForm';
-import type { Resume, ContactInfo, ProfessionalSummary, WorkExperience, Education, Skills, Project, SectionKey, FontProfile, DensityPreset } from './types';
-import './App.css';
+import { SkillsForm } from './components/SkillsForm';
+import { SummaryForm } from './components/SummaryForm';
+import type { ContactInfo, DensityPreset, Education, FontProfile, ProfessionalSummary, Project, Resume, SectionKey, Skills, WorkExperience } from './types';
 
 const STORAGE_KEY = 'quickcv_resume_data';
 const SAVE_INTERVAL = 10000; // 10 seconds
@@ -31,12 +31,12 @@ function loadFromStorage<T>(key: string, defaultValue: T): T {
 // Simple client-side validation for loaded JSON
 function validateResumeStructure(data: any): { isValid: boolean; errors: string[] } {
   const errors: string[] = [];
-  
+
   if (!data || typeof data !== 'object') {
     errors.push('Resume data must be an object');
     return { isValid: false, errors };
   }
-  
+
   // Check required fields
   if (!data.contact || typeof data.contact !== 'object') {
     errors.push('Contact information is required');
@@ -44,27 +44,27 @@ function validateResumeStructure(data: any): { isValid: boolean; errors: string[
     if (!data.contact.fullName) errors.push('Full name is required');
     if (!data.contact.email) errors.push('Email is required');
   }
-  
+
   if (!data.summary || typeof data.summary !== 'object') {
     errors.push('Professional summary is required');
   }
-  
+
   if (!Array.isArray(data.experience)) {
     errors.push('Experience must be an array');
   }
-  
+
   if (!Array.isArray(data.education)) {
     errors.push('Education must be an array');
   }
-  
+
   if (!data.skills || typeof data.skills !== 'object') {
     errors.push('Skills section is required');
   }
-  
+
   if (!Array.isArray(data.projects)) {
     errors.push('Projects must be an array');
   }
-  
+
   return { isValid: errors.length === 0, errors };
 }
 
@@ -75,11 +75,11 @@ function getEffectiveSectionOrder(baseOrder: SectionKey[], combined: boolean): s
     console.log('Returning baseOrder:', baseOrder);
     return baseOrder;
   }
-  
+
   // Find where experience or projects appears first in the order
   const expIndex = baseOrder.indexOf('experience');
   const projIndex = baseOrder.indexOf('projects');
-  
+
   // Determine insertion position (use whichever comes first)
   let insertPosition: number;
   if (expIndex >= 0 && projIndex >= 0) {
@@ -92,7 +92,7 @@ function getEffectiveSectionOrder(baseOrder: SectionKey[], combined: boolean): s
     // Neither exists, add at the end
     return [...baseOrder.filter(s => s !== 'experienceProjects'), 'experienceProjects'];
   }
-  
+
   // Build new order: keep everything except experience, projects, and experienceProjects
   const result: string[] = [];
   for (let i = 0; i < baseOrder.length; i++) {
@@ -106,13 +106,13 @@ function getEffectiveSectionOrder(baseOrder: SectionKey[], combined: boolean): s
       result.push(section);
     }
   }
-  
+
   console.log('Returning combined result:', result);
   return result;
 }
 
 function App() {
-  const [contact, setContact] = useState<ContactInfo>(() => 
+  const [contact, setContact] = useState<ContactInfo>(() =>
     loadFromStorage('contact', {
       fullName: '',
       email: '',
@@ -183,7 +183,7 @@ function App() {
   const [lastSaveTime, setLastSaveTime] = useState<number | null>(null);
   const hasChangesRef = useRef(false);
   const lastSavedDataRef = useRef<string>('');
-  
+
   // Refs to always access current state in interval callback
   const contactRef = useRef(contact);
   const summaryRef = useRef(summary);
@@ -491,7 +491,7 @@ function App() {
 
     // Convert to JSON string
     const jsonString = JSON.stringify(resumeData, null, 2);
-    
+
     // Create blob and download
     const blob = new Blob([jsonString], { type: 'application/json' });
     const url = window.URL.createObjectURL(blob);
@@ -663,7 +663,7 @@ function App() {
         <div className="auto-save-indicator-top">
           {relativeTimeMessage}
         </div>
-        
+
         <div className="more-options">
           <button
             className="more-options-btn"
@@ -672,7 +672,7 @@ function App() {
           >
             <CircleEllipsis size={20} />
           </button>
-          
+
           {isMenuOpen && (
             <div className="dropdown-menu">
               <button className="dropdown-item" onClick={handleLoadJSON}>
@@ -700,7 +700,7 @@ function App() {
           <div className="progress-steps">
             {/* Logo */}
             <div className="progress-step-wrapper">
-              <div 
+              <div
                 className="progress-step progress-step-logo"
                 onClick={() => window.location.reload()}
                 role="button"
@@ -717,17 +717,17 @@ function App() {
               </div>
               <div className="progress-connector"></div>
             </div>
-            
+
             {getEffectiveSectionOrder(sectionOrder, combinedExperienceProjects).map((section, index) => {
               const sectionKey = section as SectionKey;
               const Icon = getSectionIcon(sectionKey);
               const isComplete = isSectionComplete(sectionKey);
               const effectiveOrder = getEffectiveSectionOrder(sectionOrder, combinedExperienceProjects);
               const isLast = index === effectiveOrder.length - 1;
-              
+
               return (
                 <div key={section} className="progress-step-wrapper">
-                  <div 
+                  <div
                     className={`progress-step ${isComplete ? 'complete' : 'incomplete'} ${expandedAccordion === sectionKey ? 'active' : ''}`}
                     title={getSectionLabel(sectionKey)}
                     onClick={() => setExpandedAccordion(sectionKey)}
@@ -845,7 +845,7 @@ function App() {
 
               return (
                 <div key={key} className="accordion-card">
-                  <div 
+                  <div
                     className="accordion-header"
                     onClick={() => setExpandedAccordion(isExpanded ? null : key)}
                     onKeyDown={(e) => {
@@ -890,8 +890,8 @@ function App() {
                       >
                         <ChevronDown size={16} />
                       </button>
-                      <ChevronDown 
-                        size={24} 
+                      <ChevronDown
+                        size={24}
                         className={`accordion-chevron ${isExpanded ? 'expanded' : ''}`}
                         aria-hidden="true"
                       />
@@ -909,7 +909,7 @@ function App() {
               );
             })}
           </div>
-          
+
           <div className="form-footer-actions">
             <button
               className="btn-primary btn-generate-pdf"
@@ -994,7 +994,7 @@ function App() {
               <X size={16} />
             </button>
           </div>
-          
+
           <div className="appearance-tabs">
             <button
               className={`appearance-tab ${appearanceTab === 'font' ? 'active' : ''}`}
