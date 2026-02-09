@@ -42,7 +42,9 @@ export const DEFAULT_SECTION_ORDER: SectionKey[] = [
  * @returns Validated and complete section order with contact first
  */
 export function validateSectionOrder(sectionOrder?: string[]): SectionKey[] {
+  console.log('[TRANSFORMER] validateSectionOrder called with:', sectionOrder);
   if (!sectionOrder || !Array.isArray(sectionOrder)) {
+    console.log('[TRANSFORMER] No valid section order provided, using default');
     return DEFAULT_SECTION_ORDER;
   }
   
@@ -73,17 +75,22 @@ export function validateSectionOrder(sectionOrder?: string[]): SectionKey[] {
   // Only add missing sections if experienceProjects is NOT in the order
   // If experienceProjects is present, experience and projects should not be added
   const hasExperienceProjects = finalOrder.includes('experienceProjects');
+  console.log('[TRANSFORMER] hasExperienceProjects =', hasExperienceProjects);
+  console.log('[TRANSFORMER] finalOrder before adding missing sections:', finalOrder);
   
   for (const key of DEFAULT_SECTION_ORDER) {
     // Skip experience and projects if experienceProjects is present
     if (hasExperienceProjects && (key === 'experience' || key === 'projects')) {
+      console.log('[TRANSFORMER] Skipping', key, 'because experienceProjects is present');
       continue;
     }
     if (!finalOrder.includes(key)) {
+      console.log('[TRANSFORMER] Adding missing section:', key);
       finalOrder.push(key);
     }
   }
   
+  console.log('[TRANSFORMER] Final validated order:', finalOrder);
   return finalOrder;
 }
 
@@ -497,7 +504,10 @@ export function transformResumeToDocumentWithOrder(
   resume: Resume,
   sectionOrder?: string[]
 ): Document {
+  console.log('[TRANSFORMER] transformResumeToDocumentWithOrder called');
+  console.log('[TRANSFORMER] Input sectionOrder:', sectionOrder);
   const order = validateSectionOrder(sectionOrder);
+  console.log('[TRANSFORMER] Validated order:', order);
   const elements: DocumentElement[] = [];
   
   const sectionTransformers: Record<SectionKey, () => DocumentElement[]> = {
@@ -511,8 +521,11 @@ export function transformResumeToDocumentWithOrder(
   };
   
   // Transform sections in specified order
+  console.log('[TRANSFORMER] Starting section transformation...');
   order.forEach((sectionKey, index) => {
+    console.log('[TRANSFORMER] Transforming section:', sectionKey);
     const sectionElements = sectionTransformers[sectionKey]();
+    console.log(`[TRANSFORMER] Section ${sectionKey} generated ${sectionElements.length} elements`);
     
     if (sectionElements.length > 0) {
       elements.push(...sectionElements);
@@ -524,5 +537,6 @@ export function transformResumeToDocumentWithOrder(
     }
   });
   
+  console.log('[TRANSFORMER] Transformation complete. Total elements:', elements.length);
   return { elements };
 }

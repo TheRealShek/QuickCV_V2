@@ -70,7 +70,9 @@ function validateResumeStructure(data: any): { isValid: boolean; errors: string[
 
 // Get effective section order based on combined setting
 function getEffectiveSectionOrder(baseOrder: SectionKey[], combined: boolean): string[] {
+  console.log('getEffectiveSectionOrder called with:', { baseOrder, combined });
   if (!combined) {
+    console.log('Returning baseOrder:', baseOrder);
     return baseOrder;
   }
   
@@ -105,6 +107,7 @@ function getEffectiveSectionOrder(baseOrder: SectionKey[], combined: boolean): s
     }
   }
   
+  console.log('Returning combined result:', result);
   return result;
 }
 
@@ -156,6 +159,7 @@ function App() {
     const sanitized = loadedOrder.filter(s => s !== 'experienceProjects') as SectionKey[];
     if (!sanitized.includes('experience')) sanitized.push('experience');
     if (!sanitized.includes('projects')) sanitized.push('projects');
+    console.log('Initial sectionOrder after sanitization:', sanitized);
     return sanitized;
   });
 
@@ -761,7 +765,13 @@ function App() {
         <main className="form-container">
           {/* Accordion Sections */}
           <div className="accordion-wrapper">
-            {getEffectiveSectionOrder(sectionOrder, combinedExperienceProjects).map((sectionKey) => {
+            {(() => {
+              const effectiveOrder = getEffectiveSectionOrder(sectionOrder, combinedExperienceProjects);
+              console.log('DEBUG: sectionOrder =', sectionOrder);
+              console.log('DEBUG: combinedExperienceProjects =', combinedExperienceProjects);
+              console.log('DEBUG: effectiveOrder =', effectiveOrder);
+              return effectiveOrder;
+            })().map((sectionKey) => {
               const key = sectionKey as SectionKey;
               const getSectionConfig = (key: SectionKey) => {
                 switch (key) {
@@ -1089,7 +1099,10 @@ function App() {
                   <input
                     type="checkbox"
                     checked={combinedExperienceProjects}
-                    onChange={(e) => setCombinedExperienceProjects(e.target.checked)}
+                    onChange={(e) => {
+                      console.log('Toggle changed to:', e.target.checked);
+                      setCombinedExperienceProjects(e.target.checked);
+                    }}
                   />
                   <div>
                     <span>Combine Experience & Projects</span>
